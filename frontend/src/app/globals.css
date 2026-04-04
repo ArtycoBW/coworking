@@ -125,11 +125,8 @@
     @apply font-sans scroll-smooth;
   }
   body {
-    @apply bg-background text-foreground;
-    background-image:
-      radial-gradient(circle at top, rgba(79, 142, 247, 0.18), transparent 32%),
-      radial-gradient(circle at 78% 18%, rgba(124, 92, 252, 0.16), transparent 24%),
-      linear-gradient(180deg, #0f1117 0%, #121825 100%);
+    @apply text-foreground;
+    background-color: #0f1117; /* fallback while VideoBackground loads */
     min-height: 100vh;
   }
 

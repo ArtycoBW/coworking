@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Mono, Syne } from "next/font/google";
+import { Inter, Space_Mono, Space_Grotesk, Chakra_Petch } from "next/font/google";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -14,10 +14,16 @@ const spaceMono = Space_Mono({
   weight: ["400", "700"],
 });
 
-const syne = Syne({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   variable: "--font-heading",
-  weight: ["700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const chakraPetch = Chakra_Petch({
+  subsets: ["latin"],
+  variable: "--font-tech",
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +48,8 @@ export default function RootLayout({
       className={cn(
         inter.variable,
         spaceMono.variable,
-        syne.variable,
+        spaceGrotesk.variable,
+        chakraPetch.variable,
         "dark h-full",
       )}
     >
