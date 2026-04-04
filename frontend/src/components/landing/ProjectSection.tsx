@@ -6,7 +6,6 @@ import { ProjectShowcase } from "@/components/ui/project-showcase";
 export function ProjectSection() {
   return (
     <section className="relative py-24 px-5 sm:px-8 lg:px-10" style={{ zIndex: 10 }}>
-      {/* Semi-transparent bg */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -17,7 +16,6 @@ export function ProjectSection() {
 
       <div className="relative mx-auto max-w-7xl">
         <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-start">
-          {/* Left — section header */}
           <motion.div
             className="space-y-5 lg:sticky lg:top-24"
             initial={{ opacity: 0, y: 24 }}
@@ -40,7 +38,6 @@ export function ProjectSection() {
               Современная инфраструктура, удобное бронирование и умный доступ в любое время.
             </p>
 
-            {/* Accent stat blocks */}
             <div className="pt-4 grid grid-cols-2 gap-4">
               {[
                 { value: "121", label: "рабочих кадров" },
@@ -64,7 +61,6 @@ export function ProjectSection() {
             </div>
           </motion.div>
 
-          {/* Right — project showcase list */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}

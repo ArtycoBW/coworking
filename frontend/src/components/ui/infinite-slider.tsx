@@ -33,16 +33,13 @@ export function InfiniteSlider({
     const el = firstRef.current;
     if (!el) return;
 
-    // Width of one copy (gap included on right)
     const oneWidth = el.offsetWidth + gap;
     if (oneWidth <= gap) return;
 
     if (!reverse) {
-      // forward: 0 → -oneWidth → reset to 0
       const next = x.get() - speed * (delta / 1000);
       x.set(next <= -oneWidth ? next + oneWidth : next);
     } else {
-      // reverse: 0 → +oneWidth → reset to 0
       const next = x.get() + speed * (delta / 1000);
       x.set(next >= oneWidth ? next - oneWidth : next);
     }
@@ -64,11 +61,9 @@ export function InfiniteSlider({
         style={{ x, display: "flex" }}
         className="w-max"
       >
-        {/* First copy — measured for width */}
         <div ref={firstRef} style={{ display: "flex", gap: `${gap}px`, paddingRight: `${gap}px` }}>
           {children}
         </div>
-        {/* Second copy — seamless visual loop */}
         <div style={{ display: "flex", gap: `${gap}px`, paddingRight: `${gap}px` }}>
           {children}
         </div>

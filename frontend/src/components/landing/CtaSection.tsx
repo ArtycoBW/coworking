@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 export function CtaSection() {
   return (
     <section id="pricing" className="relative py-40 px-5 sm:px-8 overflow-hidden">
-      {/* Gradient */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -17,7 +16,6 @@ export function CtaSection() {
         }}
       />
 
-      {/* Accent radial */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -26,7 +24,6 @@ export function CtaSection() {
         }}
       />
 
-      {/* Horizontal glow line */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none"
         style={{
@@ -108,7 +105,6 @@ export function CtaSection() {
         </motion.div>
       </motion.div>
 
-      {/* Bottom fade to black */}
       <div
         className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
         style={{

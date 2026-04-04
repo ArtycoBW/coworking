@@ -87,7 +87,6 @@ export function ProjectShowcase() {
       onMouseMove={handleMouseMove}
       className="relative w-full"
     >
-      {/* Hover preview image */}
       <div
         className="pointer-events-none fixed z-50 overflow-hidden rounded-xl shadow-2xl"
         style={{
@@ -118,7 +117,6 @@ export function ProjectShowcase() {
         </div>
       </div>
 
-      {/* List */}
       <div className="space-y-0">
         {projects.map((project, index) => (
           <a
@@ -135,7 +133,6 @@ export function ProjectShowcase() {
             }}
           >
             <div className="relative py-5 border-t border-white/8">
-              {/* Hover bg */}
               <div
                 className={`absolute inset-0 -mx-4 rounded-xl transition-all duration-300 ${
                   hoveredIndex === index

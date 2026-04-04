@@ -28,7 +28,6 @@ const accentColor = {
 export function MarqueeSection() {
   return (
     <div className="relative py-10 overflow-hidden" style={{ zIndex: 10 }}>
-      {/* Glass background strip */}
       <div
         className="absolute inset-0"
         style={{
@@ -39,7 +38,6 @@ export function MarqueeSection() {
         }}
       />
 
-      {/* Top hairline */}
       <div
         className="absolute top-0 left-0 right-0 h-px"
         style={{
@@ -47,7 +45,6 @@ export function MarqueeSection() {
             "linear-gradient(90deg, transparent 0%, rgba(79,142,247,0.25) 30%, rgba(167,139,250,0.25) 70%, transparent 100%)",
         }}
       />
-      {/* Bottom hairline */}
       <div
         className="absolute bottom-0 left-0 right-0 h-px"
         style={{
@@ -56,7 +53,6 @@ export function MarqueeSection() {
         }}
       />
 
-      {/* Row 1 — forward */}
       <InfiniteSlider gap={48} speed={36} fadeWidth={120} className="mb-5 relative">
         {TAGS_TOP.map(({ text, accent }) => (
           <div key={text} className="flex items-center gap-10 shrink-0">
@@ -93,7 +89,6 @@ export function MarqueeSection() {
         ))}
       </InfiniteSlider>
 
-      {/* Row 2 — reverse */}
       <InfiniteSlider gap={48} speed={28} reverse fadeWidth={120} className="relative">
         {TAGS_BOTTOM.map(({ text, accent }) => (
           <div key={text} className="flex items-center gap-10 shrink-0">
