@@ -31,3 +31,20 @@ export interface ApiError {
   message: string;
   statusCode: number;
 }
+
+export type SpaceType = "DESK" | "MEETING_ROOM";
+export type SpaceStatus = "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
+
+export interface Space {
+  id: string;
+  name: string;
+  type: SpaceType;
+  status: SpaceStatus;
+  capacity: number;
+  description?: string | null;
+  amenities: string[];
+  posX: number;
+  posY: number;
+  posZ: number;
+  createdAt: string;
+}

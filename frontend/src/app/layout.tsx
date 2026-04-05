@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Mono, Space_Grotesk, Chakra_Petch } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

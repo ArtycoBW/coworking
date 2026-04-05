@@ -8,16 +8,47 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 
-const desks = Array.from({ length: 20 }, (_, i) => ({
+// Organic layout — fits within RW=24, RD=20 room.
+// Meeting rooms occupy x ∈ [-12,-6.5] and x ∈ [6.5,12], so desks stay in x ∈ [-5.5,5.5]
+const deskPositions = [
+  // Cluster A: top-left pod (2×2)
+  { posX: -4.5, posZ: -6.5 }, // A1
+  { posX: -2.5, posZ: -6.5 }, // A2
+  { posX: -4.5, posZ: -4.5 }, // A3
+  { posX: -2.5, posZ: -4.5 }, // A4
+  // Cluster B: top-right (pair + L)
+  { posX:  0.5, posZ: -6.5 }, // B1
+  { posX:  2.5, posZ: -6.5 }, // B2
+  { posX:  4.5, posZ: -6.5 }, // B3
+  { posX:  4.5, posZ: -4.5 }, // B4 (L below B3)
+  // Cluster C: mid-left (L shape)
+  { posX: -5.0, posZ: -1.5 }, // C1
+  { posX: -3.0, posZ: -1.5 }, // C2
+  { posX: -5.0, posZ:  0.5 }, // C3
+  // Centre singles
+  { posX: -0.5, posZ: -2.0 }, // C4
+  { posX:  1.5, posZ: -2.0 }, // D1
+  // Cluster D: right-mid
+  { posX:  3.5, posZ: -3.0 }, // D2
+  { posX:  5.0, posZ: -3.0 }, // D3
+  { posX:  5.0, posZ: -1.0 }, // D4
+  // Cluster E: bottom
+  { posX: -3.5, posZ:  3.5 }, // E1
+  { posX: -1.5, posZ:  3.5 }, // E2
+  { posX:  0.5, posZ:  4.0 }, // E3
+  { posX:  3.0, posZ:  3.5 }, // E4
+];
+
+const desks = deskPositions.map((pos, i) => ({
   name: `Desk ${String.fromCharCode(65 + Math.floor(i / 4))}${(i % 4) + 1}`,
   type: SpaceType.DESK,
   status: SpaceStatus.AVAILABLE,
   capacity: 1,
   description: 'Рабочее место с монитором и периферией.',
   amenities: ['monitor', 'keyboard', 'mouse', 'usb_hub', 'lamp'],
-  posX: (i % 5) * 3.5 - 7,
+  posX: pos.posX,
   posY: 0,
-  posZ: Math.floor(i / 5) * 3 - 4.5,
+  posZ: pos.posZ,
 }));
 
 const meetingRooms = [
@@ -28,9 +59,9 @@ const meetingRooms = [
     capacity: 8,
     description: 'Переговорная на 8 человек с проектором и видеосвязью.',
     amenities: ['projector', 'whiteboard', 'hdmi', 'webcam', 'coffee_machine'],
-    posX: -9,
+    posX: -9.2,
     posY: 0,
-    posZ: 0,
+    posZ: -3.5,
   },
   {
     name: 'Meeting Room Beta',
@@ -39,9 +70,9 @@ const meetingRooms = [
     capacity: 8,
     description: 'Переговорная на 8 человек с большим TV-экраном.',
     amenities: ['tv_screen', 'whiteboard', 'hdmi', 'webcam', 'coffee_machine'],
-    posX: 9,
+    posX: 9.2,
     posY: 0,
-    posZ: 0,
+    posZ: -3.5,
   },
 ];
 
