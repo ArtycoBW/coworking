@@ -1,64 +1,47 @@
-import bcrypt from 'bcryptjs';
+import '../src/config/load-env';
 import { PrismaClient, Role, SpaceStatus, SpaceType } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import bcrypt from 'bcryptjs';
+import { Pool } from 'pg';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 
-const deskSpaces = Array.from({ length: 18 }, (_, index) => ({
-  name: `Desk ${String(index + 1).padStart(2, '0')}`,
+const desks = Array.from({ length: 20 }, (_, i) => ({
+  name: `Desk ${String.fromCharCode(65 + Math.floor(i / 4))}${(i % 4) + 1}`,
   type: SpaceType.DESK,
   status: SpaceStatus.AVAILABLE,
   capacity: 1,
-  description: 'Открытое рабочее место в общей зоне коворкинга.',
-  amenities: ['Wi-Fi', 'Power', 'Monitor'],
-  posX: (index % 6) * 1.35 - 3.4,
+  description: 'Рабочее место с монитором и периферией.',
+  amenities: ['monitor', 'keyboard', 'mouse', 'usb_hub', 'lamp'],
+  posX: (i % 5) * 3.5 - 7,
   posY: 0,
-  posZ: Math.floor(index / 6) * 1.5 - 2.2,
+  posZ: Math.floor(i / 5) * 3 - 4.5,
 }));
 
 const meetingRooms = [
   {
-    name: 'Meeting Room A',
-    type: SpaceType.MEETING_ROOM,
-    status: SpaceStatus.AVAILABLE,
-    capacity: 4,
-    description: 'Переговорная для коротких встреч и созвонов.',
-    amenities: ['TV', 'Whiteboard', 'Video Call Kit'],
-    posX: -4.6,
-    posY: 0,
-    posZ: 2.8,
-  },
-  {
-    name: 'Meeting Room B',
-    type: SpaceType.MEETING_ROOM,
-    status: SpaceStatus.AVAILABLE,
-    capacity: 6,
-    description: 'Средняя переговорная для командных обсуждений.',
-    amenities: ['TV', 'Whiteboard', 'Air Conditioning'],
-    posX: -1.5,
-    posY: 0,
-    posZ: 2.8,
-  },
-  {
-    name: 'Meeting Room C',
+    name: 'Meeting Room Alpha',
     type: SpaceType.MEETING_ROOM,
     status: SpaceStatus.AVAILABLE,
     capacity: 8,
-    description: 'Большая переговорная для презентаций и воркшопов.',
-    amenities: ['Projector', 'Soundbar', 'Whiteboard'],
-    posX: 1.6,
+    description: 'Переговорная на 8 человек с проектором и видеосвязью.',
+    amenities: ['projector', 'whiteboard', 'hdmi', 'webcam', 'coffee_machine'],
+    posX: -9,
     posY: 0,
-    posZ: 2.8,
+    posZ: 0,
   },
   {
-    name: 'Meeting Room D',
+    name: 'Meeting Room Beta',
     type: SpaceType.MEETING_ROOM,
-    status: SpaceStatus.MAINTENANCE,
-    capacity: 4,
-    description: 'Переговорная в резерве для сервисных работ.',
-    amenities: ['TV', 'Air Conditioning'],
-    posX: 4.7,
+    status: SpaceStatus.AVAILABLE,
+    capacity: 8,
+    description: 'Переговорная на 8 человек с большим TV-экраном.',
+    amenities: ['tv_screen', 'whiteboard', 'hdmi', 'webcam', 'coffee_machine'],
+    posX: 9,
     posY: 0,
-    posZ: 2.8,
+    posZ: 0,
   },
 ];
 
@@ -71,51 +54,27 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: 'admin@garage.dstu.ru' },
-    update: {
-      name: 'Garage Admin',
-      password: defaultPassword,
-      role: Role.ADMIN,
-    },
-    create: {
-      email: 'admin@garage.dstu.ru',
-      name: 'Garage Admin',
-      password: defaultPassword,
-      role: Role.ADMIN,
-    },
+    update: { name: 'Garage Admin', password: defaultPassword, role: Role.ADMIN },
+    create: { email: 'admin@garage.dstu.ru', name: 'Garage Admin', password: defaultPassword, role: Role.ADMIN },
   });
 
   await prisma.user.upsert({
     where: { email: 'test@dstu.ru' },
-    update: {
-      name: 'Тестовый студент',
-      password: defaultPassword,
-      studentId: 'DSTU-2026-001',
-      role: Role.USER,
-    },
-    create: {
-      email: 'test@dstu.ru',
-      name: 'Тестовый студент',
-      password: defaultPassword,
-      studentId: 'DSTU-2026-001',
-      role: Role.USER,
-    },
+    update: { name: 'Тестовый студент', password: defaultPassword, studentId: 'DSTU-2026-001', role: Role.USER },
+    create: { email: 'test@dstu.ru', name: 'Тестовый студент', password: defaultPassword, studentId: 'DSTU-2026-001', role: Role.USER },
   });
 
-  await prisma.space.createMany({
-    data: [...deskSpaces, ...meetingRooms],
-  });
+  await prisma.space.createMany({ data: [...desks, ...meetingRooms] });
 
-  console.log('Seed completed:', {
-    users: 2,
-    spaces: deskSpaces.length + meetingRooms.length,
-  });
+  console.log(`✓ Seed completed: 2 users, ${desks.length} desks, ${meetingRooms.length} meeting rooms`);
 }
 
 main()
-  .catch((error) => {
-    console.error(error);
+  .catch((e) => {
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
