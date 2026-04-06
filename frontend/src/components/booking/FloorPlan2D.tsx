@@ -11,14 +11,13 @@ interface FloorPlan2DProps {
   onSelect: (space: Space) => void;
 }
 
-// Layout constants
 const COLS = 5;
-const CW = 108;  // cell width
-const CH = 84;   // cell height
-const GX = 16;   // gap x
-const GY = 14;   // gap y
-const PL = 52;   // left padding (for row labels)
-const PT = 56;   // top for desks
+const CW = 108;
+const CH = 84;
+const GX = 16;
+const GY = 14;
+const PL = 52;
+const PT = 56;
 const ROOM_H = 90;
 const ROOM_GAP = 20;
 const SECTION_GAP = 36;
@@ -101,14 +100,12 @@ export function FloorPlan2D({ spaces, availableIds, selectedId, onSelect }: Floo
           padding: "28px 24px 24px",
         }}
       >
-        {/* grid bg */}
         <div className="absolute inset-0 pointer-events-none" style={{
           backgroundImage: "linear-gradient(rgba(79,142,247,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(79,142,247,0.04) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
         }} />
 
         <div className="relative z-10">
-          {/* header */}
           <div className="flex items-center justify-between mb-5">
             <div>
               <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.3em", color: "#4f8ef7", textTransform: "uppercase" }}>
@@ -130,10 +127,8 @@ export function FloorPlan2D({ spaces, availableIds, selectedId, onSelect }: Floo
             </div>
           </div>
 
-          {/* divider */}
           <div style={{ height: "1px", background: "rgba(255,255,255,0.05)", marginBottom: "20px" }} />
 
-          {/* meeting rooms section */}
           {rooms.length > 0 && <div className="mb-2">
             <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.25em", color: "rgba(124,92,252,0.5)", textTransform: "uppercase", marginBottom: "10px" }}>
               Переговорные комнаты
@@ -192,16 +187,13 @@ export function FloorPlan2D({ spaces, availableIds, selectedId, onSelect }: Floo
             </div>
           </div>}
 
-          {/* divider */}
           {rooms.length > 0 && desks.length > 0 && <div style={{ height: "1px", background: "rgba(255,255,255,0.05)", margin: "20px 0" }} />}
 
-          {/* desks section */}
           <div>
             <p style={{ fontFamily: "var(--font-mono)", fontSize: "8px", letterSpacing: "0.25em", color: "rgba(79,142,247,0.5)", textTransform: "uppercase", marginBottom: "14px" }}>
               Рабочие места
             </p>
 
-            {/* column numbers */}
             <div className="flex gap-3 mb-2" style={{ paddingLeft: "28px" }}>
               {Array.from({ length: COLS }, (_, i) => (
                 <div key={i} style={{ width: CW, textAlign: "center", fontFamily: "var(--font-mono)", fontSize: "9px", color: "rgba(79,142,247,0.3)", letterSpacing: "0.1em" }}>
@@ -210,14 +202,11 @@ export function FloorPlan2D({ spaces, availableIds, selectedId, onSelect }: Floo
               ))}
             </div>
 
-            {/* desk rows */}
             {Array.from({ length: DESK_ROWS }, (_, row) => (
               <div key={row} className="flex items-center gap-3 mb-3">
-                {/* row label */}
                 <div style={{ width: "20px", flexShrink: 0, fontFamily: "var(--font-mono)", fontSize: "10px", color: "rgba(79,142,247,0.35)", textAlign: "center" }}>
                   {String.fromCharCode(65 + row)}
                 </div>
-                {/* desks in row */}
                 {desks.slice(row * COLS, row * COLS + COLS).map((desk) => {
                   const st = getState(desk);
                   const col = C[st];

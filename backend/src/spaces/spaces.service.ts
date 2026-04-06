@@ -72,7 +72,6 @@ export class SpacesService {
   async update(id: string, dto: UpdateSpaceDto) {
     await this.findOne(id);
     const updated = await this.prisma.space.update({ where: { id }, data: dto });
-    // Broadcast status change so 3D map updates in real-time
     if (dto.status) {
       this.gateway.broadcastSpaceStatusChanged(id, dto.status);
     }

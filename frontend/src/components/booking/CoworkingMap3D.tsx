@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo, Suspense } from "react";
 import { Canvas, useFrame, ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, Grid, useGLTF, Html } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { toast } from "sonner";
 import { RATES } from "@/lib/pricing";
@@ -10,14 +10,13 @@ import type { Space } from "@/types";
 
 useGLTF.preload("/models/workplace.glb");
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const RW = 24, RD = 20, RH = 4.2;
-const WALL = { color: "#9aa0b4" as const, roughness: 0.55, metalness: 0.05 };
-const FLOOR = { color: "#888fa0" as const, roughness: 0.7, metalness: 0.0 };
-const FC = "#7a8098"; // frame color
+const RW = 24, RD = 20, RH = 3.8;
+const WALL  = { color: "#2a3347" as const, roughness: 0.65, metalness: 0.05 };
+const FLOOR = { color: "#161b27" as const, roughness: 0.85, metalness: 0.0 };
+const FC = "#3a4560";
+const ACCENT = "#4f8ef7";
 
-// ─── WindowPane ───────────────────────────────────────────────────────────────
-function WindowPane({ position, rotation = [0, 0, 0] as [number, number, number], w = 3.2, h = 1.9 }: {
+function WindowPane({ position, rotation = [0, 0, 0] as [number, number, number], w = 3.0, h = 1.7 }: {
   position: [number, number, number]; rotation?: [number, number, number]; w?: number; h?: number;
 }) {
   const t = 0.1;
@@ -39,15 +38,13 @@ function WindowPane({ position, rotation = [0, 0, 0] as [number, number, number]
       ))}
       <mesh>
         <planeGeometry args={[w - 0.02, h - 0.02]} />
-        <meshStandardMaterial color="#a8ccf0" emissive="#6aaae0" emissiveIntensity={0.5}
-          transparent opacity={0.3} side={THREE.DoubleSide} />
+        <meshStandardMaterial color="#3a5580" emissive="#2a4070" emissiveIntensity={0.4}
+          transparent opacity={0.35} side={THREE.DoubleSide} />
       </mesh>
-      <pointLight position={[0, 0, 1.2]} intensity={0.4} color="#d0eaff" distance={9} decay={2} />
     </group>
   );
 }
 
-// ─── DoorFrame ────────────────────────────────────────────────────────────────
 function DoorFrame({ position, rotation = [0, 0, 0] as [number, number, number] }: {
   position: [number, number, number]; rotation?: [number, number, number];
 }) {
@@ -60,20 +57,18 @@ function DoorFrame({ position, rotation = [0, 0, 0] as [number, number, number] 
       <group position={[-dW / 2, 0, 0]}>
         <mesh position={[dW / 2 * Math.cos(0.3), 0, dW / 2 * Math.sin(0.3)]} rotation={[0, -0.3, 0]}>
           <boxGeometry args={[dW * 0.95, dH * 0.95, 0.06]} />
-          <meshStandardMaterial color="#dce3f0" roughness={0.4} />
+          <meshStandardMaterial color="#1e2840" roughness={0.4} />
         </mesh>
       </group>
       <mesh position={[0.28, -0.08, 0.16]}>
         <cylinderGeometry args={[0.02, 0.02, 0.25, 8]} />
-        <meshStandardMaterial color="#8898b8" metalness={0.9} roughness={0.1} />
+        <meshStandardMaterial color="#6070a0" metalness={0.9} roughness={0.1} />
       </mesh>
     </group>
   );
 }
 
-// ─── Glass partition wall ─────────────────────────────────────────────────────
-// Creates a vertical glass wall panel with optional door gap at one end
-function GlassPartition({ x1, x2, z, h = RH - 0.5, doorGapX1, doorGapX2 }: {
+function GlassPartition({ x1, x2, z, h = RH - 0.4, doorGapX1, doorGapX2 }: {
   x1: number; x2: number; z: number; h?: number;
   doorGapX1?: number; doorGapX2?: number;
 }) {
@@ -81,7 +76,6 @@ function GlassPartition({ x1, x2, z, h = RH - 0.5, doorGapX1, doorGapX2 }: {
   if (doorGapX1 !== undefined && doorGapX2 !== undefined) {
     if (x1 < doorGapX1) panels.push({ cx: (x1 + doorGapX1) / 2, w: doorGapX1 - x1 });
     if (doorGapX2 < x2) panels.push({ cx: (doorGapX2 + x2) / 2, w: x2 - doorGapX2 });
-    // door frame at gap
   } else {
     panels.push({ cx: (x1 + x2) / 2, w: x2 - x1 });
   }
@@ -89,30 +83,26 @@ function GlassPartition({ x1, x2, z, h = RH - 0.5, doorGapX1, doorGapX2 }: {
     <group>
       {panels.map(({ cx, w }, i) => (
         <group key={i} position={[cx, h / 2, z]}>
-          {/* thin glass — renderOrder ensures no Z-fighting with frames */}
           <mesh renderOrder={1}>
             <boxGeometry args={[w, h, 0.05]} />
-            <meshStandardMaterial color="#ccd6f0" roughness={0.15} metalness={0.1} transparent opacity={0.15}
+            <meshStandardMaterial color="#4a6090" roughness={0.15} metalness={0.1} transparent opacity={0.12}
               side={THREE.DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
           </mesh>
-          {/* frame border lines — pushed ±0.04 so they don't coplane with glass */}
-          <mesh position={[0,  h / 2 - 0.04, 0.04]}><boxGeometry args={[w, 0.06, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
-          <mesh position={[0, -h / 2 + 0.04, 0.04]}><boxGeometry args={[w, 0.06, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
-          <mesh position={[-w / 2 + 0.04, 0, 0.04]}><boxGeometry args={[0.06, h, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
-          <mesh position={[ w / 2 - 0.04, 0, 0.04]}><boxGeometry args={[0.06, h, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[0,  h / 2 - 0.04, 0.04]}><boxGeometry args={[w, 0.05, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[0, -h / 2 + 0.04, 0.04]}><boxGeometry args={[w, 0.05, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[-w / 2 + 0.04, 0, 0.04]}><boxGeometry args={[0.05, h, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[ w / 2 - 0.04, 0, 0.04]}><boxGeometry args={[0.05, h, 0.04]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
         </group>
       ))}
-      {/* skirting at bottom */}
       <mesh position={[(x1 + x2) / 2, 0.04, z]}>
-        <boxGeometry args={[x2 - x1, 0.07, 0.08]} />
-        <meshStandardMaterial color="#2255ff" emissive="#2255ff" emissiveIntensity={2.5} />
+        <boxGeometry args={[x2 - x1, 0.06, 0.07]} />
+        <meshStandardMaterial color={ACCENT} emissive={ACCENT} emissiveIntensity={2.2} />
       </mesh>
     </group>
   );
 }
 
-// ─── Z-direction glass partition ──────────────────────────────────────────────
-function GlassPartitionZ({ x, z1, z2, h = RH - 0.5, doorGapZ1, doorGapZ2 }: {
+function GlassPartitionZ({ x, z1, z2, h = RH - 0.4, doorGapZ1, doorGapZ2 }: {
   x: number; z1: number; z2: number; h?: number;
   doorGapZ1?: number; doorGapZ2?: number;
 }) {
@@ -129,42 +119,38 @@ function GlassPartitionZ({ x, z1, z2, h = RH - 0.5, doorGapZ1, doorGapZ2 }: {
         <group key={i} position={[x, h / 2, cz]}>
           <mesh renderOrder={1}>
             <boxGeometry args={[0.05, h, d]} />
-            <meshStandardMaterial color="#ccd6f0" roughness={0.15} metalness={0.1} transparent opacity={0.15}
+            <meshStandardMaterial color="#4a6090" roughness={0.15} metalness={0.1} transparent opacity={0.12}
               side={THREE.DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
           </mesh>
-          <mesh position={[0.04, h / 2 - 0.04, 0]}><boxGeometry args={[0.04, 0.06, d]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
-          <mesh position={[0.04, -h / 2 + 0.04, 0]}><boxGeometry args={[0.04, 0.06, d]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
-          <mesh position={[0.04, 0, -d / 2 + 0.04]}><boxGeometry args={[0.04, h, 0.06]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
-          <mesh position={[0.04, 0,  d / 2 - 0.04]}><boxGeometry args={[0.04, h, 0.06]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[0.04, h / 2 - 0.04, 0]}><boxGeometry args={[0.04, 0.05, d]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[0.04, -h / 2 + 0.04, 0]}><boxGeometry args={[0.04, 0.05, d]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[0.04, 0, -d / 2 + 0.04]}><boxGeometry args={[0.04, h, 0.05]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
+          <mesh position={[0.04, 0,  d / 2 - 0.04]}><boxGeometry args={[0.04, h, 0.05]} /><meshStandardMaterial color={FC} roughness={0.4} /></mesh>
         </group>
       ))}
       <mesh position={[x, 0.04, (z1 + z2) / 2]}>
-        <boxGeometry args={[0.08, 0.07, z2 - z1]} />
-        <meshStandardMaterial color="#2255ff" emissive="#2255ff" emissiveIntensity={2.5} />
+        <boxGeometry args={[0.07, 0.06, z2 - z1]} />
+        <meshStandardMaterial color={ACCENT} emissive={ACCENT} emissiveIntensity={2.2} />
       </mesh>
     </group>
   );
 }
 
-// ─── Conference table + chairs ────────────────────────────────────────────────
 function ConferenceChair({ position, rotY = 0 }: { position: [number, number, number]; rotY?: number }) {
   return (
     <group position={position} rotation={[0, rotY, 0]}>
-      {/* seat */}
-      <mesh position={[0, 0.44, 0]} castShadow>
+      <mesh position={[0, 0.44, 0]}>
         <boxGeometry args={[0.52, 0.06, 0.52]} />
-        <meshStandardMaterial color="#d8ddf0" roughness={0.6} />
+        <meshStandardMaterial color="#1e2840" roughness={0.6} />
       </mesh>
-      {/* back */}
-      <mesh position={[0, 0.76, -0.24]} castShadow>
+      <mesh position={[0, 0.76, -0.24]}>
         <boxGeometry args={[0.5, 0.55, 0.05]} />
-        <meshStandardMaterial color="#d8ddf0" roughness={0.6} />
+        <meshStandardMaterial color="#1e2840" roughness={0.6} />
       </mesh>
-      {/* legs */}
       {([[-0.2, -0.2], [-0.2, 0.2], [0.2, -0.2], [0.2, 0.2]] as [number, number][]).map(([lx, lz], i) => (
         <mesh key={i} position={[lx, 0.22, lz]}>
           <boxGeometry args={[0.04, 0.44, 0.04]} />
-          <meshStandardMaterial color="#8898b8" metalness={0.8} roughness={0.15} />
+          <meshStandardMaterial color="#4a5880" metalness={0.8} roughness={0.15} />
         </mesh>
       ))}
     </group>
@@ -183,95 +169,69 @@ function ConferenceTableGeometry({ cx, cz }: { cx: number; cz: number }) {
   ];
   return (
     <group>
-      {/* table top */}
-      <mesh position={[cx, tH, cz]} castShadow receiveShadow>
+      <mesh position={[cx, tH, cz]}>
         <boxGeometry args={[tW, tT, tL]} />
-        <meshStandardMaterial color="#4a4f62" roughness={0.3} metalness={0.3} />
+        <meshStandardMaterial color="#1e2535" roughness={0.4} metalness={0.35} />
       </mesh>
-      {/* shiny surface reflection strip */}
       <mesh position={[cx, tH + tT / 2 + 0.001, cz]}>
         <planeGeometry args={[tW - 0.1, tL - 0.1]} />
-        <meshStandardMaterial color="#5a6080" emissive="#30385a" emissiveIntensity={0.2}
+        <meshStandardMaterial color="#2a3555" emissive="#1a2545" emissiveIntensity={0.15}
           transparent opacity={0.4} roughness={0.15} metalness={0.7} />
       </mesh>
-      {/* 4 metal legs */}
       {([[-tW/2+0.08, tL/2-0.12], [-tW/2+0.08, -(tL/2-0.12)], [tW/2-0.08, tL/2-0.12], [tW/2-0.08, -(tL/2-0.12)]] as [number, number][]).map(([lx, lz], i) => (
-        <mesh key={i} position={[cx + lx, tH / 2, cz + lz]} castShadow>
+        <mesh key={i} position={[cx + lx, tH / 2, cz + lz]}>
           <boxGeometry args={[0.06, tH, 0.06]} />
-          <meshStandardMaterial color="#606880" metalness={0.9} roughness={0.1} />
+          <meshStandardMaterial color="#3a4870" metalness={0.9} roughness={0.1} />
         </mesh>
       ))}
-      {/* chairs */}
       {chairs.map((c, i) => <ConferenceChair key={i} position={[c.x, 0, c.z]} rotY={c.ry} />)}
     </group>
   );
 }
 
-// ─── Room ─────────────────────────────────────────────────────────────────────
 function Room() {
   const hw = RW / 2, hd = RD / 2;
-  // Meeting room partition line (x direction)
-  const PX_L = -hw + 5.5; // left room: x ∈ [-hw, PX_L]
-  const PX_R =  hw - 5.5; // right room: x ∈ [PX_R, hw]
+  const PX_L = -hw + 5.5;
+  const PX_R =  hw - 5.5;
 
   return (
     <group>
-      {/* floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[RW, RD]} />
         <meshStandardMaterial {...FLOOR} />
       </mesh>
-      <Grid position={[0, 0.005, 0]} args={[RW, RD]}
-        cellSize={1} cellThickness={0.2} cellColor="#707888"
-        sectionSize={4} sectionThickness={0.4} sectionColor="#5a6070"
-        fadeDistance={30} fadeStrength={1.1} infiniteGrid={false} />
 
-      {/* North wall */}
       <mesh position={[0, RH / 2, -hd]}><boxGeometry args={[RW, RH, 0.2]} /><meshStandardMaterial {...WALL} /></mesh>
-      {/* West wall */}
       <mesh position={[-hw, RH / 2, 0]}><boxGeometry args={[0.2, RH, RD]} /><meshStandardMaterial {...WALL} /></mesh>
-      {/* East wall */}
       <mesh position={[hw, RH / 2, 0]}><boxGeometry args={[0.2, RH, RD]} /><meshStandardMaterial {...WALL} /></mesh>
 
-      {/* North wall windows */}
-      <WindowPane position={[-6.5, 2.1, -hd + 0.11]} w={3.2} h={1.9} />
-      <WindowPane position={[  0,  2.1, -hd + 0.11]} w={3.2} h={1.9} />
-      <WindowPane position={[ 6.5, 2.1, -hd + 0.11]} w={3.2} h={1.9} />
+      <WindowPane position={[-6.5, 2.0, -hd + 0.11]} w={3.0} h={1.7} />
+      <WindowPane position={[  0,  2.0, -hd + 0.11]} w={3.0} h={1.7} />
+      <WindowPane position={[ 6.5, 2.0, -hd + 0.11]} w={3.0} h={1.7} />
 
-      {/* Side wall windows — inside meeting rooms */}
-      <WindowPane position={[-hw + 0.11, 2.1, -5.5]} rotation={[0,  Math.PI / 2, 0]} w={3.0} h={1.8} />
-      <WindowPane position={[ hw - 0.11, 2.1, -5.5]} rotation={[0, -Math.PI / 2, 0]} w={3.0} h={1.8} />
-      {/* Side wall windows — main area */}
-      <WindowPane position={[-hw + 0.11, 2.1, 3.0]} rotation={[0,  Math.PI / 2, 0]} w={2.8} h={1.8} />
-      <WindowPane position={[ hw - 0.11, 2.1, 3.0]} rotation={[0, -Math.PI / 2, 0]} w={2.8} h={1.8} />
+      <WindowPane position={[-hw + 0.11, 2.0, -5.5]} rotation={[0,  Math.PI / 2, 0]} w={2.8} h={1.6} />
+      <WindowPane position={[ hw - 0.11, 2.0, -5.5]} rotation={[0, -Math.PI / 2, 0]} w={2.8} h={1.6} />
+      <WindowPane position={[-hw + 0.11, 2.0, 3.0]} rotation={[0,  Math.PI / 2, 0]} w={2.6} h={1.6} />
+      <WindowPane position={[ hw - 0.11, 2.0, 3.0]} rotation={[0, -Math.PI / 2, 0]} w={2.6} h={1.6} />
 
-      {/* Entrance door — east wall near south */}
       <DoorFrame position={[hw - 0.1, 1.15, 7.5]} rotation={[0, -Math.PI / 2, 0]} />
 
-      {/* LED skirting — north + sides */}
-      <mesh position={[0, 0.04, -hd + 0.14]}><boxGeometry args={[RW - 0.4, 0.06, 0.04]} /><meshStandardMaterial color="#2255ff" emissive="#2255ff" emissiveIntensity={3} /></mesh>
-      <mesh position={[-hw + 0.14, 0.04, 0]} rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[RD - 0.4, 0.06, 0.04]} /><meshStandardMaterial color="#2255ff" emissive="#2255ff" emissiveIntensity={3} /></mesh>
-      <mesh position={[ hw - 0.14, 0.04, 0]} rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[RD - 0.4, 0.06, 0.04]} /><meshStandardMaterial color="#2255ff" emissive="#2255ff" emissiveIntensity={3} /></mesh>
+      <mesh position={[0, 0.04, -hd + 0.14]}><boxGeometry args={[RW - 0.4, 0.05, 0.04]} /><meshStandardMaterial color={ACCENT} emissive={ACCENT} emissiveIntensity={2.5} /></mesh>
+      <mesh position={[-hw + 0.14, 0.04, 0]} rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[RD - 0.4, 0.05, 0.04]} /><meshStandardMaterial color={ACCENT} emissive={ACCENT} emissiveIntensity={2.5} /></mesh>
+      <mesh position={[ hw - 0.14, 0.04, 0]} rotation={[0, Math.PI / 2, 0]}><boxGeometry args={[RD - 0.4, 0.05, 0.04]} /><meshStandardMaterial color={ACCENT} emissive={ACCENT} emissiveIntensity={2.5} /></mesh>
 
-      {/* ── Meeting room partitions ── */}
-      {/* Left room: glass east wall at x=PX_L, door gap near south end */}
       <GlassPartitionZ x={PX_L} z1={-hd + 0.1} z2={2.0} doorGapZ1={0.4} doorGapZ2={1.8} />
-      {/* Left room: short south wall piece */}
-      <GlassPartition x1={-hw + 0.1} x2={PX_L} z={2.0} h={RH - 0.5} doorGapX1={PX_L - 2.2} doorGapX2={PX_L - 0.1} />
+      <GlassPartition x1={-hw + 0.1} x2={PX_L} z={2.0} h={RH - 0.4} doorGapX1={PX_L - 2.2} doorGapX2={PX_L - 0.1} />
 
-      {/* Right room: glass west wall at x=PX_R */}
       <GlassPartitionZ x={PX_R} z1={-hd + 0.1} z2={2.0} doorGapZ1={0.4} doorGapZ2={1.8} />
-      {/* Right room: short south wall piece */}
-      <GlassPartition x1={PX_R} x2={hw - 0.1} z={2.0} h={RH - 0.5} doorGapX1={PX_R + 0.1} doorGapX2={PX_R + 2.2} />
+      <GlassPartition x1={PX_R} x2={hw - 0.1} z={2.0} h={RH - 0.4} doorGapX1={PX_R + 0.1} doorGapX2={PX_R + 2.2} />
 
-      {/* Conference tables (visual only — interaction handled by MeetingRoomBox) */}
       <ConferenceTableGeometry cx={-(hw - 2.8)} cz={-3.5} />
       <ConferenceTableGeometry cx={ hw - 2.8}  cz={-3.5} />
     </group>
   );
 }
 
-// ─── Desk ─────────────────────────────────────────────────────────────────────
 interface SeatProps {
   space: Space;
   isAvailable: boolean;
@@ -288,18 +248,16 @@ function WorkplaceSeat({ space, isAvailable, isSelected, onSelect }: SeatProps) 
 
   const state = isSelected ? "selected" : isAvailable ? "available" : "occupied";
   const glowColor = state === "selected" ? "#18d860" : state === "available" ? "#4f8ef7" : "#ef4444";
-  const targetGlow = hovered ? 2.8 : state === "selected" ? 1.8 : 0.6;
+  const targetGlow = hovered ? 2.6 : state === "selected" ? 1.6 : 0.5;
 
   const cloned = useMemo(() => {
     const c = scene.clone(true);
     c.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
         child.material = (child.material as THREE.MeshStandardMaterial).clone();
-        child.castShadow = true;
       }
     });
     return c;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, space.id]);
 
   useEffect(() => {
@@ -341,15 +299,15 @@ function WorkplaceSeat({ space, isAvailable, isSelected, onSelect }: SeatProps) 
       <mesh ref={floorRef} position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[2.1, 2.1]} />
         <meshStandardMaterial color={glowColor} emissive={glowColor} emissiveIntensity={targetGlow}
-          transparent opacity={0.12} side={THREE.DoubleSide} />
+          transparent opacity={0.1} side={THREE.DoubleSide} />
       </mesh>
       <lineSegments position={[0, 0.016, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <edgesGeometry args={[new THREE.PlaneGeometry(2.1, 2.1)]} />
-        <lineBasicMaterial color={glowColor} transparent opacity={0.6} />
+        <lineBasicMaterial color={glowColor} transparent opacity={0.55} />
       </lineSegments>
       <primitive object={cloned} scale={[1.2, 1.2, 1.2]} />
       {showTip && (
-        <Html distanceFactor={10} center position={[0, 2.6, 0]}>
+        <Html distanceFactor={10} center position={[0, 2.4, 0]}>
           <div style={{ background: "rgba(10,13,20,0.96)", border: `1px solid ${state === "selected" ? "rgba(52,211,153,0.45)" : state === "available" ? "rgba(79,142,247,0.4)" : "rgba(239,68,68,0.4)"}`, borderRadius: "10px", padding: "8px 12px", minWidth: "128px", backdropFilter: "blur(16px)", pointerEvents: "none", boxShadow: "0 8px 28px rgba(0,0,0,0.55)" }}>
             <div style={{ fontFamily: "var(--font-tech)", fontSize: "12px", fontWeight: 700, color: "#e8edf5", marginBottom: "2px" }}>{space.name.replace("Desk ", "Место ")}</div>
             <div style={{ fontFamily: "var(--font-sans)", fontSize: "9px", color: "rgba(136,146,164,0.6)", marginBottom: "4px" }}>{RATES.DESK} ₽/ч · рабочее место</div>
@@ -363,7 +321,6 @@ function WorkplaceSeat({ space, isAvailable, isSelected, onSelect }: SeatProps) 
   );
 }
 
-// ─── Meeting room (click target over the conference table) ────────────────────
 function MeetingRoomBox({ space, isAvailable, isSelected, onSelect }: SeatProps) {
   const [hovered, setHovered] = useState(false);
   const [showTip, setShowTip] = useState(false);
@@ -384,17 +341,15 @@ function MeetingRoomBox({ space, isAvailable, isSelected, onSelect }: SeatProps)
       onPointerOver={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); setHovered(true); setShowTip(true); document.body.style.cursor = "pointer"; }}
       onPointerOut={(e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); setHovered(false); setShowTip(false); document.body.style.cursor = "auto"; }}
     >
-      {/* invisible click surface over the table */}
       <mesh position={[0, 0.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[2.5, 5.5]} />
         <meshStandardMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
-      {/* floor glow under table */}
       <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[3.2, 6.0]} />
         <meshStandardMaterial color={glowColor} emissive={glowColor}
-          emissiveIntensity={hovered ? 0.9 : state === "selected" ? 0.6 : 0.25}
-          transparent opacity={0.1} />
+          emissiveIntensity={hovered ? 0.9 : state === "selected" ? 0.6 : 0.22}
+          transparent opacity={0.09} />
       </mesh>
       {showTip && (
         <Html distanceFactor={10} center position={[0, 2.2, 0]}>
@@ -411,7 +366,6 @@ function MeetingRoomBox({ space, isAvailable, isSelected, onSelect }: SeatProps)
   );
 }
 
-// ─── Scene ────────────────────────────────────────────────────────────────────
 interface CoworkingMap3DProps {
   spaces: Space[];
   availableIds: string[];
@@ -425,17 +379,15 @@ function Scene({ spaces, availableIds, selectedId, onSelect }: CoworkingMap3DPro
 
   return (
     <>
-      <ambientLight intensity={1.3} color="#d8e8ff" />
-      <directionalLight position={[5, 14, 10]} intensity={1.5} castShadow color="#ffffff"
-        shadow-mapSize={[1024, 1024]} shadow-camera-near={0.5} shadow-camera-far={50}
-        shadow-camera-left={-14} shadow-camera-right={14} shadow-camera-top={12} shadow-camera-bottom={-12} />
-      <pointLight position={[-(RW / 2 - 2), 3.5, -3]} intensity={0.7} color="#d0e8ff" distance={16} decay={2} />
-      <pointLight position={[ (RW / 2 - 2), 3.5, -3]} intensity={0.7} color="#d0e8ff" distance={16} decay={2} />
+      <ambientLight intensity={1.1} color="#c8d8f0" />
+      <directionalLight position={[4, 12, 8]} intensity={1.2} color="#e8f0ff" />
+      <pointLight position={[-(RW / 2 - 2), 3.2, -3]} intensity={0.5} color="#c8deff" distance={14} decay={2} />
+      <pointLight position={[ (RW / 2 - 2), 3.2, -3]} intensity={0.5} color="#c8deff" distance={14} decay={2} />
 
       <OrbitControls enablePan
-        minPolarAngle={0.1} maxPolarAngle={Math.PI / 2.3}
-        minAzimuthAngle={-Math.PI / 2.1} maxAzimuthAngle={Math.PI / 2.1}
-        minDistance={4} maxDistance={26}
+        minPolarAngle={0.15} maxPolarAngle={Math.PI / 2.2}
+        minAzimuthAngle={-Math.PI / 2.0} maxAzimuthAngle={Math.PI / 2.0}
+        minDistance={5} maxDistance={28}
         target={[0, 0.5, -2]}
       />
 
@@ -457,25 +409,26 @@ function Scene({ spaces, availableIds, selectedId, onSelect }: CoworkingMap3DPro
           onSelect={onSelect} />
       ))}
 
-      <fog attach="fog" args={["#6e7480", 26, 46]} />
+      <fog attach="fog" args={["#0a0d14", 28, 48]} />
     </>
   );
 }
 
-// ─── Export ───────────────────────────────────────────────────────────────────
 export function CoworkingMap3D(props: CoworkingMap3DProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 350);
+    const t = setTimeout(() => setMounted(true), 300);
     return () => clearTimeout(t);
   }, []);
   if (!mounted) return null;
 
   return (
-    <Canvas shadows camera={{ position: [0, 13, 17], fov: 52 }}
-      gl={{ alpha: false, antialias: true, powerPreference: "default" }}
-      dpr={[1, 1.5]}
-      style={{ background: "#6e7480" }}>
+    <Canvas
+      camera={{ position: [0, 15, 19], fov: 48 }}
+      gl={{ alpha: false, antialias: true, powerPreference: "high-performance" }}
+      dpr={[1, 1.2]}
+      style={{ background: "#0a0d14" }}
+    >
       <Scene {...props} />
     </Canvas>
   );

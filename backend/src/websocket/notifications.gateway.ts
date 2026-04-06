@@ -22,7 +22,6 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
   server: Server;
 
   private readonly logger = new Logger(NotificationsGateway.name);
-  // userId → Set of socket ids
   private readonly userSockets = new Map<string, Set<string>>();
 
   constructor(private readonly jwtService: JwtService) {}
@@ -45,7 +44,6 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
       const userId = payload.sub;
       client.data.userId = userId;
 
-      // Join personal room
       await client.join(`user:${userId}`);
 
       if (!this.userSockets.has(userId)) {
@@ -71,7 +69,6 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  /** Send a notification to a specific user */
   sendNotificationToUser(
     userId: string,
     notification: { id: string; title: string; message: string; createdAt: Date },
@@ -79,12 +76,10 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     this.server.to(`user:${userId}`).emit('notification', notification);
   }
 
-  /** Broadcast space status change to all connected clients */
   broadcastSpaceStatusChanged(spaceId: string, status: string) {
     this.server.emit('space_status_changed', { spaceId, status });
   }
 
-  /** Broadcast new booking to all (so 3D map updates) */
   broadcastBookingChanged(spaceId: string) {
     this.server.emit('booking_changed', { spaceId });
   }

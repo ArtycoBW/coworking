@@ -61,7 +61,6 @@ export class BookingsCron {
         this.prisma.user.update({ where: { id: b.userId }, data: { rating: newRating } }),
       ]);
 
-      // Push real-time notification
       await this.notifications.createAndPush(
         b.userId,
         'Неявка на бронирование',

@@ -138,7 +138,6 @@ export default function HistoryPage() {
                   }}
                 >
                   <div className="flex items-center gap-4">
-                    {/* Icon */}
                     <div
                       className="size-10 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ background: "rgba(79,142,247,0.1)", border: "1px solid rgba(79,142,247,0.18)" }}
@@ -146,7 +145,6 @@ export default function HistoryPage() {
                       <MapPin className="size-4 text-primary/60" />
                     </div>
 
-                    {/* Main info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 flex-wrap">
                         <span style={{ fontFamily: "var(--font-heading)", fontSize: "14px", fontWeight: 600, color: "#e8edf5" }}>
@@ -173,7 +171,6 @@ export default function HistoryPage() {
                       </div>
                     </div>
 
-                    {/* Action */}
                     <div className="flex-shrink-0">
                       {canCancel(b) ? (
                         <Button variant="ghost" size="sm" onClick={() => handleCancel(b.id)}

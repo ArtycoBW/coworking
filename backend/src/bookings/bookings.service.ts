@@ -68,14 +68,12 @@ export class BookingsService {
       include: { space: true },
     });
 
-    // Push notification via WebSocket
     await this.notifications.createAndPush(
       userId,
       'Бронирование подтверждено',
       `${space.name} · ${this.formatTime(start)} – ${this.formatTime(end)}`,
     );
 
-    // Broadcast space change to all clients (3D map updates)
     this.gateway.broadcastBookingChanged(dto.spaceId);
 
     return booking;
@@ -149,7 +147,6 @@ export class BookingsService {
         : null,
     };
 
-    // Notify the user about admin status change
     await this.notifications.createAndPush(
       booking.userId,
       'Статус бронирования изменён',

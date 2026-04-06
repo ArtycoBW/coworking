@@ -31,7 +31,6 @@ export class NotificationsService {
     });
   }
 
-  /** Create notification and push it via WebSocket */
   async createAndPush(userId: string, title: string, message: string) {
     const notification = await this.prisma.notification.create({
       data: { userId, title, message },

@@ -9,7 +9,6 @@ import type { AppNotification } from "@/types";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:3001";
 
-// Module-level singleton — persists across React renders and StrictMode double-mounts
 let globalSocket: Socket | null = null;
 
 export function useSocket() {
@@ -17,7 +16,6 @@ export function useSocket() {
   const qc = useQueryClient();
 
   useEffect(() => {
-    // Logged out — clean up
     if (!isAuthenticated || !token) {
       if (globalSocket) {
         globalSocket.removeAllListeners();
@@ -27,7 +25,6 @@ export function useSocket() {
       return;
     }
 
-    // Already connected — don't disconnect, just re-bind handlers below
     if (!globalSocket?.connected) {
       if (globalSocket) {
         globalSocket.removeAllListeners();
@@ -55,7 +52,6 @@ export function useSocket() {
       void qc.invalidateQueries({ queryKey: ["bookings"] });
     };
 
-    // Remove all previous instances before adding — prevents duplicates on StrictMode re-mount
     socket
       .off("notification").on("notification", onNotification)
       .off("space_status_changed").on("space_status_changed", onSpaceChanged)

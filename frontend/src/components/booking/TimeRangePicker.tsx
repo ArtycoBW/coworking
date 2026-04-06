@@ -47,10 +47,8 @@ export function TimeRangePicker({ startTime, endTime, selectedDate, onStartChang
   const startMin = toMins(startTime);
   const endMin = toMins(endTime);
 
-  // For today: disable slots in the past (round up to next 30-min slot)
   const now = new Date();
   const nowMins = now.getHours() * 60 + now.getMinutes();
-  // round up to next 30-min boundary
   const minAllowedMins = isToday(selectedDate)
     ? Math.ceil(nowMins / 30) * 30
     : 0;

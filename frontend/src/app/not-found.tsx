@@ -11,7 +11,6 @@ export default function NotFound() {
       className="relative min-h-screen flex flex-col items-center justify-center px-6"
       style={{ background: "#0a0d14" }}
     >
-      {/* Ambient glow */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
@@ -21,7 +20,6 @@ export default function NotFound() {
       />
 
       <div className="relative z-10 flex flex-col items-center gap-8 text-center">
-        {/* 404 number */}
         <div className="relative">
           <span
             style={{
@@ -58,7 +56,6 @@ export default function NotFound() {
           </div>
         </div>
 
-        {/* Message */}
         <div className="flex flex-col gap-3">
           <h1
             style={{
@@ -84,13 +81,11 @@ export default function NotFound() {
           </p>
         </div>
 
-        {/* Divider */}
         <div
           className="h-px"
           style={{ width: "120px", background: "rgba(255,255,255,0.07)" }}
         />
 
-        {/* Action */}
         <Link
           href="/"
           className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 transition-all hover:opacity-80"
@@ -107,7 +102,6 @@ export default function NotFound() {
           На главную
         </Link>
 
-        {/* Label */}
         <span
           style={{
             fontFamily: "var(--font-mono)",

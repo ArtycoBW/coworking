@@ -123,7 +123,6 @@ export default function ProfilePage() {
         ) : (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-5">
 
-            {/* Avatar + basic info */}
             <div className="rounded-2xl p-6 flex items-start gap-6"
               style={{ background: "rgba(16,20,32,0.75)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
               <div className="size-16 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -152,7 +151,6 @@ export default function ProfilePage() {
               </Button>
             </div>
 
-            {/* Edit form */}
             {editing && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
                 className="rounded-2xl p-5 space-y-4"
@@ -193,7 +191,6 @@ export default function ProfilePage() {
               </motion.div>
             )}
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
               {[
                 { icon: Calendar, label: "Всего броней", value: String(totalBookings), color: "#4f8ef7" },
@@ -214,7 +211,6 @@ export default function ProfilePage() {
               ))}
             </div>
 
-            {/* Recent bookings */}
             {recentBookings.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}

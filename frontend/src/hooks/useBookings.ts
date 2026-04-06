@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { Booking, BookingStatus } from "@/types";
 
@@ -40,6 +41,9 @@ export function useCancelBooking() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["bookings", "my"] });
       void qc.invalidateQueries({ queryKey: ["spaces"] });
+    },
+    onError: () => {
+      toast.error("Не удалось отменить бронирование");
     },
   });
 }

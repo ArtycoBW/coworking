@@ -8,16 +8,15 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 
-// 8 desks, well-spaced 2×4 grid in the centre area x ∈ [-4.5,4.5], z ∈ [-7,3]
 const deskPositions = [
-  { posX: -4.5, posZ: -7.0 }, // A1
-  { posX: -1.5, posZ: -7.0 }, // A2
-  { posX:  1.5, posZ: -7.0 }, // A3
-  { posX:  4.5, posZ: -7.0 }, // A4
-  { posX: -4.5, posZ: -2.5 }, // B1
-  { posX: -1.5, posZ: -2.5 }, // B2
-  { posX:  1.5, posZ: -2.5 }, // B3
-  { posX:  4.5, posZ: -2.5 }, // B4
+  { posX: -4.5, posZ: -7.0 },
+  { posX: -1.5, posZ: -7.0 },
+  { posX:  1.5, posZ: -7.0 },
+  { posX:  4.5, posZ: -7.0 },
+  { posX: -4.5, posZ: -2.5 },
+  { posX: -1.5, posZ: -2.5 },
+  { posX:  1.5, posZ: -2.5 },
+  { posX:  4.5, posZ: -2.5 },
 ];
 
 const desks = deskPositions.map((pos, i) => ({
@@ -78,7 +77,6 @@ async function main() {
 
   await prisma.space.createMany({ data: [...desks, ...meetingRooms] });
 
-  // Add some occupied bookings for April 6, 10, 15 so the map shows red spots
   const testUser = await prisma.user.findUnique({ where: { email: 'test@dstu.ru' } });
   const allSpaces = await prisma.space.findMany({ where: { type: SpaceType.DESK } });
 

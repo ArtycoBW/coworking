@@ -149,12 +149,10 @@ export default function BookingPage() {
   const endDt = getDateTime(endTimeStr);
   const canBook = !!selectedSpace && !!startDt && !!endDt && !!availabilityParams;
 
-  // Checked = availability was requested
   const checked = !!availabilityParams;
 
   return (
     <div className="h-screen bg-[#0f1117] flex flex-col overflow-hidden">
-      {/* ── Header ── */}
       <header
         className="flex-shrink-0 flex items-center gap-4 px-6 h-14 z-50"
         style={{
@@ -222,9 +220,7 @@ export default function BookingPage() {
         </div>
       </header>
 
-      {/* ── Body ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* ── Sidebar ── */}
         <motion.aside
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -232,7 +228,6 @@ export default function BookingPage() {
           className="w-[272px] flex-shrink-0 flex flex-col gap-2.5 p-3 overflow-y-auto"
           style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}
         >
-          {/* Space type */}
           <GlassCard>
             <SectionLabel>Тип места</SectionLabel>
             <Tabs value={spaceType} onValueChange={(v) => {
@@ -251,7 +246,6 @@ export default function BookingPage() {
             </Tabs>
           </GlassCard>
 
-          {/* Date */}
           <GlassCard style={{ background: "transparent", padding: "8px" }}>
             <SectionLabel>Дата</SectionLabel>
             <Calendar
@@ -264,7 +258,6 @@ export default function BookingPage() {
             />
           </GlassCard>
 
-          {/* Time — full picker OR compact summary depending on state */}
           <AnimatePresence mode="wait">
             {!checked ? (
               <motion.div key="time-picker"
@@ -309,7 +302,6 @@ export default function BookingPage() {
             )}
           </AnimatePresence>
 
-          {/* Check button */}
           <Button
             onClick={handleCheckAvailability}
             disabled={isFetching}
@@ -328,7 +320,6 @@ export default function BookingPage() {
             }
           </Button>
 
-          {/* After check: legend + selected space */}
           <AnimatePresence>
             {checked && (
               <motion.div
@@ -338,7 +329,6 @@ export default function BookingPage() {
                 transition={{ duration: 0.2 }}
                 className="space-y-2.5"
               >
-                {/* Legend */}
                 <GlassCard>
                   <SectionLabel>Легенда</SectionLabel>
                   <div className="space-y-1.5">
@@ -355,7 +345,6 @@ export default function BookingPage() {
                   </div>
                 </GlassCard>
 
-                {/* Selected space */}
                 {selectedSpace && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
@@ -429,7 +418,6 @@ export default function BookingPage() {
           </AnimatePresence>
         </motion.aside>
 
-        {/* ── Map area ── */}
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

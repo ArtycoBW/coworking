@@ -74,7 +74,6 @@ function StatCard({ label, value, icon: Icon, color, delay = 0, trend }: StatCar
         boxShadow: hovered ? `0 0 32px ${color}18` : "none",
       }}
     >
-      {/* halo */}
       <motion.div
         animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.7 }}
         transition={{ duration: 0.4 }}
@@ -106,7 +105,6 @@ function StatCard({ label, value, icon: Icon, color, delay = 0, trend }: StatCar
         </p>
       </div>
 
-      {/* bottom accent line */}
       <motion.div
         animate={{ scaleX: hovered ? 1 : 0, opacity: hovered ? 1 : 0 }}
         transition={{ duration: 0.3 }}
@@ -162,7 +160,6 @@ export default function DashboardPage() {
     <div className="min-h-screen relative" style={{ background: "#0a0d14" }}>
       <AnimatedGradientBackground />
 
-      {/* Header */}
       <header
         className="sticky top-0 z-50 flex items-center justify-between px-6 h-14"
         style={{
@@ -181,7 +178,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Notification bell */}
           <div className="relative">
             <button
               onClick={() => setBellOpen((v) => !v)}
@@ -284,7 +280,6 @@ export default function DashboardPage() {
       </header>
 
       <main className="relative z-10 px-6 py-10 max-w-6xl mx-auto">
-        {/* Hero greeting */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -307,14 +302,12 @@ export default function DashboardPage() {
           </p>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {STATS.map((s) => (
             <StatCard key={s.label} {...s} />
           ))}
         </div>
 
-        {/* Quick actions */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -348,7 +341,6 @@ export default function DashboardPage() {
           </button>
         </motion.div>
 
-        {/* Upcoming bookings */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

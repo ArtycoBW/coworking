@@ -21,7 +21,6 @@ export function PageLoader() {
     const tick = () => {
       const elapsed = Date.now() - start;
       const progress = Math.min(elapsed / DURATION, 1);
-      // Ease-out quad: fast start, slow finish
       const eased = 1 - Math.pow(1 - progress, 2.2);
       setCount(Math.floor(eased * 100));
 
@@ -53,7 +52,6 @@ export function PageLoader() {
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none"
           style={{ background: "#0a0d14" }}
         >
-          {/* Ambient glow */}
           <div
             className="pointer-events-none absolute inset-0"
             style={{
@@ -62,14 +60,12 @@ export function PageLoader() {
             }}
           />
 
-          {/* Logo */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="mb-12 flex flex-col items-center gap-3"
           >
-            {/* G mark */}
             <div
               className="flex size-16 items-center justify-center rounded-2xl"
               style={{
@@ -91,7 +87,6 @@ export function PageLoader() {
               </span>
             </div>
 
-            {/* Wordmark */}
             <div className="flex items-baseline gap-2">
               <span
                 style={{
@@ -117,14 +112,12 @@ export function PageLoader() {
             </div>
           </motion.div>
 
-          {/* Counter */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.4 }}
             className="flex flex-col items-center gap-4"
           >
-            {/* Progress bar */}
             <div
               className="relative h-px overflow-hidden rounded-full"
               style={{ width: "160px", background: "rgba(255,255,255,0.06)" }}
@@ -139,7 +132,6 @@ export function PageLoader() {
               />
             </div>
 
-            {/* Number */}
             <span
               style={{
                 fontFamily: "var(--font-tech)",
