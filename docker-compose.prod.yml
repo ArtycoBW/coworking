@@ -1,14 +1,15 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: garage_postgres_prod
+    container_name: garage_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-garage_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_this_password}
+      POSTGRES_DB: ${POSTGRES_DB:-garage_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -19,35 +20,34 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
-    container_name: garage_backend_prod
+    container_name: garage_backend
     restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://garage_user:change_this_password@postgres:5432/garage_db}
       PORT: ${PORT:-3001}
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
-      NODE_ENV: production
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-https://example.com}
+      RUN_DB_SEED: ${RUN_DB_SEED:-false}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "${PORT:-3001}:3001"
+      - "127.0.0.1:3001:3001"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
-    container_name: garage_frontend_prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://example.com}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-wss://example.com}
+    container_name: garage_frontend
     restart: unless-stopped
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL}
-      NODE_ENV: production
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
 volumes:
   postgres_data:

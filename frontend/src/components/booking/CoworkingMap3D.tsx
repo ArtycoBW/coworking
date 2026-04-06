@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useMemo, Suspense } from "react";
 import { Canvas, useFrame, ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { Html, OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { toast } from "sonner";
 import { RATES } from "@/lib/pricing";
