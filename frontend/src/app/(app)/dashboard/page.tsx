@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   LogOut, LayoutDashboard, Calendar, Clock, Wifi, Users,
-  Bell, CheckCheck, MapPin, ArrowRight, Loader2, X, TrendingUp,
+  Bell, CheckCheck, MapPin, ArrowRight, Loader2, X, TrendingUp, Shield,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -249,7 +249,31 @@ export default function DashboardPage() {
           </div>
 
           <div className="h-4 w-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-          <span style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: "rgba(136,146,164,0.8)" }}>{user?.name}</span>
+
+          {user?.role === "ADMIN" && (
+            <button
+              onClick={() => router.push("/admin")}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-full hover:bg-white/5 transition-colors"
+              style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.15em", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)" }}
+            >
+              <Shield className="size-3" /> ADMIN
+            </button>
+          )}
+
+          <button
+            onClick={() => router.push("/profile")}
+            className="flex items-center gap-2 h-8 px-3 rounded-full hover:bg-white/5 transition-colors"
+            style={{ border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div className="size-5 rounded-md flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, rgba(79,142,247,0.4), rgba(167,139,250,0.4))" }}>
+              <span style={{ fontFamily: "var(--font-heading)", fontSize: "9px", fontWeight: 700, color: "#fff" }}>
+                {user?.name?.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+              </span>
+            </div>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: "rgba(136,146,164,0.8)" }}>{user?.name?.split(" ")[0]}</span>
+          </button>
+
           <Button variant="ghost" size="sm" onClick={handleLogout}
             className="h-8 px-3 rounded-full text-muted-foreground hover:text-white hover:bg-white/5">
             <LogOut className="size-3.5 mr-1.5" />

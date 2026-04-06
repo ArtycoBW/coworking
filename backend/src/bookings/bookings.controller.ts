@@ -16,6 +16,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import type { JwtUser } from '../auth/interfaces/jwt-user.interface';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto';
 
 @ApiTags('bookings')
 @ApiBearerAuth()
@@ -44,5 +45,12 @@ export class BookingsController {
   @Get()
   findAll() {
     return this.bookingsService.findAll();
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @Patch(':id/status')
+  forceStatus(@Param('id') id: string, @Body() dto: UpdateBookingStatusDto) {
+    return this.bookingsService.forceStatus(id, dto.status);
   }
 }

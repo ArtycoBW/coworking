@@ -137,6 +137,17 @@ export class BookingsService {
     return updated;
   }
 
+  async forceStatus(id: string, status: BookingStatus) {
+    const booking = await this.prisma.booking.findUnique({ where: { id } });
+    if (!booking) throw new NotFoundException('Бронирование не найдено');
+
+    return this.prisma.booking.update({
+      where: { id },
+      data: { status },
+      include: { space: true, user: { select: { id: true, name: true, email: true } } },
+    });
+  }
+
   private formatTime(d: Date) {
     return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
   }
