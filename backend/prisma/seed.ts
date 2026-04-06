@@ -66,14 +66,14 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: 'admin@garage.dstu.ru' },
-    update: { name: 'Garage Admin', password: defaultPassword, role: Role.ADMIN },
-    create: { email: 'admin@garage.dstu.ru', name: 'Garage Admin', password: defaultPassword, role: Role.ADMIN },
+    update: { firstName: 'Garage', lastName: 'Admin', password: defaultPassword, role: Role.ADMIN },
+    create: { email: 'admin@garage.dstu.ru', firstName: 'Garage', lastName: 'Admin', password: defaultPassword, role: Role.ADMIN },
   });
 
   await prisma.user.upsert({
     where: { email: 'test@dstu.ru' },
-    update: { name: 'Тестовый студент', password: defaultPassword, studentId: 'DSTU-2026-001', role: Role.USER },
-    create: { email: 'test@dstu.ru', name: 'Тестовый студент', password: defaultPassword, studentId: 'DSTU-2026-001', role: Role.USER },
+    update: { firstName: 'Тестовый', lastName: 'студент', password: defaultPassword, role: Role.USER },
+    create: { email: 'test@dstu.ru', firstName: 'Тестовый', lastName: 'студент', password: defaultPassword, role: Role.USER },
   });
 
   await prisma.space.createMany({ data: [...desks, ...meetingRooms] });

@@ -15,9 +15,9 @@ import { useRegister } from "@/hooks/useAuth";
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, "Введите имя"),
+    firstName: z.string().min(1, "Введите имя"),
+    lastName: z.string().min(1, "Введите фамилию"),
     email: z.string().email("Некорректный email"),
-    studentId: z.string().optional(),
     password: z
       .string()
       .min(8, "Минимум 8 символов")
@@ -38,14 +38,14 @@ export default function RegisterPage() {
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", studentId: "", password: "", confirmPassword: "" },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "" },
   });
 
   const onSubmit = (data: RegisterForm) => {
     register.mutate({
-      name: data.name,
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
-      studentId: data.studentId || undefined,
       password: data.password,
     });
   };
@@ -113,12 +113,26 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="firstName"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem>
                       <FormLabel style={labelStyle}>Имя</FormLabel>
                       <FormControl>
-                        <Input placeholder="Иван Иванов" className={inputClass} {...field} />
+                        <Input placeholder="Иван" className={inputClass} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel style={labelStyle}>Фамилия</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Иванов" className={inputClass} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -133,23 +147,6 @@ export default function RegisterPage() {
                       <FormLabel style={labelStyle}>Email</FormLabel>
                       <FormControl>
                         <Input placeholder="you@dstu.ru" type="email" autoComplete="email" className={inputClass} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="studentId"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel style={labelStyle}>
-                        Студенческий билет{" "}
-                        <span style={{ color: "rgba(136,146,164,0.5)", fontWeight: 400 }}>(опционально)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="ДГТУ-12345" className={inputClass} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -24,7 +24,7 @@ export function useUpdateUser() {
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; studentId?: string }) =>
+    mutationFn: (data: { firstName?: string; lastName?: string }) =>
       api.put<User>("/users/me", data).then((r) => r.data),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["me"] }),
   });

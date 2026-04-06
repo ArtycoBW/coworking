@@ -3,12 +3,19 @@ import { Role } from '@prisma/client';
 import { IsEnum, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class UpdateUserAdminDto {
-  @ApiPropertyOptional({ example: 'Иван Иванов' })
+  @ApiPropertyOptional({ example: 'Иван' })
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  @MaxLength(120)
-  name?: string;
+  @MinLength(1)
+  @MaxLength(60)
+  firstName?: string;
+
+  @ApiPropertyOptional({ example: 'Иванов' })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  lastName?: string;
 
   @ApiPropertyOptional({ enum: Role })
   @IsOptional()

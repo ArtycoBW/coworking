@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -24,26 +23,11 @@ export class UsersService {
   }
 
   async updateCurrentUser(userId: string, dto: UpdateProfileDto) {
-    const studentId =
-      dto.studentId === undefined ? undefined : dto.studentId.trim() || null;
-    const name = dto.name?.trim();
-
-    if (studentId) {
-      const existingUser = await this.prisma.user.findUnique({
-        where: { studentId },
-        select: { id: true },
-      });
-
-      if (existingUser && existingUser.id !== userId) {
-        throw new ConflictException('Student ID already in use');
-      }
-    }
-
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(name ? { name } : {}),
-        ...(studentId !== undefined ? { studentId } : {}),
+        ...(dto.firstName?.trim() ? { firstName: dto.firstName.trim() } : {}),
+        ...(dto.lastName?.trim() ? { lastName: dto.lastName.trim() } : {}),
       },
     });
 
@@ -76,7 +60,8 @@ export class UsersService {
     const updated = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(dto.name ? { name: dto.name.trim() } : {}),
+        ...(dto.firstName?.trim() ? { firstName: dto.firstName.trim() } : {}),
+        ...(dto.lastName?.trim() ? { lastName: dto.lastName.trim() } : {}),
         ...(dto.role !== undefined ? { role: dto.role } : {}),
         ...(dto.rating !== undefined ? { rating: Math.round(dto.rating * 10) / 10 } : {}),
       },

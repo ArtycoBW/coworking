@@ -6,9 +6,11 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft, User as UserIcon, Star, Calendar, Clock, Shield, Loader2, Save, Pencil } from "lucide-react";
+import { ArrowLeft, User as UserIcon, Star, Calendar, Clock, Shield, Loader2, Save, Pencil, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/authStore";
+import { AnimatedGradientBackground } from "@/components/ui/animated-gradient-background";
 import { useMe, useUpdateProfile } from "@/hooks/useUsers";
 import { useMyBookings } from "@/hooks/useBookings";
 
@@ -32,6 +34,14 @@ function RatingStars({ rating }: { rating: number }) {
   );
 }
 
+const STATUS_MAP: Record<string, { label: string; color: string }> = {
+  CONFIRMED: { label: "Подтверждено", color: "#4f8ef7" },
+  PENDING:   { label: "Ожидание",     color: "#f59e0b" },
+  CANCELLED: { label: "Отменено",     color: "#ef4444" },
+  COMPLETED: { label: "Завершено",    color: "#6b7280" },
+  NO_SHOW:   { label: "Неявка",       color: "#f97316" },
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user: storeUser, setAuth, token } = useAuthStore();
@@ -42,13 +52,13 @@ export default function ProfilePage() {
   const user = me ?? storeUser;
 
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState("");
-  const [studentId, setStudentId] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   useEffect(() => {
     if (user) {
-      setName(user.name);
-      setStudentId(user.studentId ?? "");
+      setFirstName(user.firstName ?? "");
+      setLastName(user.lastName ?? "");
     }
   }, [user]);
 
@@ -59,10 +69,15 @@ export default function ProfilePage() {
     0,
   );
 
+  const recentBookings = [...bookings]
+    .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+    .slice(0, 5);
+
   const handleSave = () => {
-    if (!name.trim()) { toast.error("Имя не может быть пустым"); return; }
+    if (!firstName.trim()) { toast.error("Имя не может быть пустым"); return; }
+    if (!lastName.trim()) { toast.error("Фамилия не может быть пустой"); return; }
     updateProfile.mutate(
-      { name: name.trim(), studentId: studentId.trim() || undefined },
+      { firstName: firstName.trim(), lastName: lastName.trim() },
       {
         onSuccess: (updated) => {
           toast.success("Профиль обновлён");
@@ -74,12 +89,15 @@ export default function ProfilePage() {
     );
   };
 
-  const initials = user?.name
-    ? user.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+  const initials = user
+    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
     : "?";
 
+  const inputClass = "h-10 bg-[#0a0d14] border-white/10 focus:border-primary/50 text-white placeholder:text-white/25 rounded-xl text-sm";
+
   return (
-    <div className="min-h-screen" style={{ background: "#0a0d14" }}>
+    <div className="min-h-screen relative" style={{ background: "#0a0d14" }}>
+      <AnimatedGradientBackground />
       <header
         className="sticky top-0 z-50 flex items-center gap-4 px-6 h-14"
         style={{ background: "rgba(10,13,20,0.85)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
@@ -106,7 +124,7 @@ export default function ProfilePage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-5">
 
             {/* Avatar + basic info */}
-            <div className="rounded-2xl p-6 flex items-center gap-6"
+            <div className="rounded-2xl p-6 flex items-start gap-6"
               style={{ background: "rgba(16,20,32,0.75)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
               <div className="size-16 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{ background: "linear-gradient(135deg, rgba(79,142,247,0.3), rgba(167,139,250,0.3))", border: "1px solid rgba(79,142,247,0.3)", boxShadow: "0 0 24px rgba(79,142,247,0.15)" }}>
@@ -123,17 +141,12 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <p style={{ fontFamily: "var(--font-sans)", fontSize: "13px", color: "rgba(136,146,164,0.7)" }}>{user?.email}</p>
-                {user?.studentId && (
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "rgba(79,142,247,0.7)", marginTop: "3px" }}>
-                    {user.studentId}
-                  </p>
-                )}
                 <div className="mt-3">
                   <RatingStars rating={user?.rating ?? 5} />
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setEditing((v) => !v)}
-                className="h-8 px-3 rounded-xl gap-1.5 hover:bg-white/5"
+                className="h-8 px-3 rounded-xl gap-1.5 hover:bg-white/5 flex-shrink-0"
                 style={{ fontFamily: "var(--font-heading)", fontSize: "11px", color: editing ? "#4f8ef7" : "rgba(136,146,164,0.6)", border: "1px solid rgba(255,255,255,0.07)" }}>
                 <Pencil className="size-3" /> {editing ? "Отмена" : "Изменить"}
               </Button>
@@ -147,32 +160,27 @@ export default function ProfilePage() {
                 <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", color: "#4f8ef7", textTransform: "uppercase" }}>
                   Редактирование профиля
                 </p>
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "rgba(136,146,164,0.7)", display: "block", marginBottom: "6px" }}>
+                    <label className="block mb-1.5" style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "rgba(136,146,164,0.7)" }}>
                       Имя
                     </label>
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full rounded-xl px-3 py-2 outline-none transition-all"
-                      style={{ background: "rgba(10,13,20,0.6)", border: "1px solid rgba(255,255,255,0.1)", color: "#e8edf5", fontFamily: "var(--font-sans)", fontSize: "13px" }}
-                      onFocus={(e) => (e.target.style.borderColor = "rgba(79,142,247,0.5)")}
-                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+                    <Input
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Иван"
+                      className={inputClass}
                     />
                   </div>
                   <div>
-                    <label style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "rgba(136,146,164,0.7)", display: "block", marginBottom: "6px" }}>
-                      Student ID
+                    <label className="block mb-1.5" style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "rgba(136,146,164,0.7)" }}>
+                      Фамилия
                     </label>
-                    <input
-                      value={studentId}
-                      onChange={(e) => setStudentId(e.target.value)}
-                      placeholder="DSTU-2026-XXX"
-                      className="w-full rounded-xl px-3 py-2 outline-none transition-all"
-                      style={{ background: "rgba(10,13,20,0.6)", border: "1px solid rgba(255,255,255,0.1)", color: "#e8edf5", fontFamily: "var(--font-mono)", fontSize: "12px" }}
-                      onFocus={(e) => (e.target.style.borderColor = "rgba(79,142,247,0.5)")}
-                      onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+                    <Input
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Иванов"
+                      className={inputClass}
                     />
                   </div>
                 </div>
@@ -205,6 +213,52 @@ export default function ProfilePage() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Recent bookings */}
+            {recentBookings.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}
+                className="rounded-2xl p-5 space-y-3"
+                style={{ background: "rgba(16,20,32,0.75)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
+                <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", color: "#4f8ef7", textTransform: "uppercase" }}>
+                  Последние бронирования
+                </p>
+                <div className="space-y-2">
+                  {recentBookings.map((b) => {
+                    const s = STATUS_MAP[b.status];
+                    const spaceName = b.space.type === "DESK"
+                      ? b.space.name.replace("Desk ", "Место ")
+                      : b.space.name.replace("Meeting Room ", "Переговорная ");
+                    return (
+                      <div key={b.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                        style={{ background: "rgba(10,13,20,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div className="size-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: `${s.color}15`, border: `1px solid ${s.color}30` }}>
+                          <MapPin className="size-3" style={{ color: s.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p style={{ fontFamily: "var(--font-heading)", fontSize: "12px", color: "#e8edf5" }}>{spaceName}</p>
+                          <p style={{ fontFamily: "var(--font-sans)", fontSize: "10px", color: "rgba(136,146,164,0.5)" }}>
+                            {format(new Date(b.startTime), "d MMM, HH:mm", { locale: ru })} – {format(new Date(b.endTime), "HH:mm")}
+                          </p>
+                        </div>
+                        <span style={{ fontFamily: "var(--font-sans)", fontSize: "10px", fontWeight: 600, color: s.color,
+                          background: `${s.color}18`, border: `1px solid ${s.color}35`, borderRadius: "6px", padding: "2px 8px" }}>
+                          {s.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {bookings.length > 5 && (
+                  <Button variant="ghost" size="sm" onClick={() => router.push("/history")}
+                    className="w-full h-8 rounded-xl text-xs hover:bg-white/5"
+                    style={{ fontFamily: "var(--font-sans)", color: "rgba(136,146,164,0.5)" }}>
+                    Показать все ({bookings.length})
+                  </Button>
+                )}
+              </motion.div>
+            )}
 
           </motion.div>
         )}

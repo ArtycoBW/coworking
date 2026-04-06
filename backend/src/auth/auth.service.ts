@@ -21,18 +21,16 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
-    const studentId = dto.studentId?.trim() || null;
 
     await this.ensureEmailIsUnique(email);
-    await this.ensureStudentIdIsUnique(studentId);
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        name: dto.name.trim(),
-        studentId,
+        firstName: dto.firstName.trim(),
+        lastName: dto.lastName.trim(),
       },
     });
 
@@ -86,21 +84,6 @@ export class AuthService {
 
     if (existingUser) {
       throw new ConflictException('Email already in use');
-    }
-  }
-
-  private async ensureStudentIdIsUnique(studentId: string | null) {
-    if (!studentId) {
-      return;
-    }
-
-    const existingUser = await this.prisma.user.findUnique({
-      where: { studentId },
-      select: { id: true },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('Student ID already in use');
     }
   }
 

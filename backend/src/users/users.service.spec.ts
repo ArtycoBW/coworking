@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from './users.service';
@@ -6,6 +6,18 @@ import { UsersService } from './users.service';
 describe('UsersService', () => {
   let service: UsersService;
   let prisma: jest.Mocked<Pick<PrismaService, 'user'>>;
+
+  const mockUser = {
+    id: 'user-1',
+    email: 'test@dstu.ru',
+    password: '$2b$10$hashed',
+    firstName: 'Иван',
+    lastName: 'Иванов',
+    role: Role.USER,
+    rating: 5,
+    createdAt: new Date('2026-04-04T00:00:00.000Z'),
+    updatedAt: new Date('2026-04-04T00:00:00.000Z'),
+  };
 
   beforeEach(() => {
     prisma = {
@@ -19,62 +31,29 @@ describe('UsersService', () => {
   });
 
   it('returns current user without password', async () => {
-    prisma.user.findUnique.mockResolvedValue({
-      id: 'user-1',
-      email: 'test@dstu.ru',
-      password: '$2b$10$hashed',
-      name: 'Иван Иванов',
-      studentId: 'DSTU-2026-001',
-      role: Role.USER,
-      rating: 5,
-      createdAt: new Date('2026-04-04T00:00:00.000Z'),
-      updatedAt: new Date('2026-04-04T00:00:00.000Z'),
-    });
+    prisma.user.findUnique.mockResolvedValue(mockUser);
 
     const result = await service.getCurrentUser('user-1');
 
     expect(result.email).toBe('test@dstu.ru');
+    expect(result.name).toBe('Иван Иванов');
     expect(result).not.toHaveProperty('password');
   });
 
-  it('updates profile data', async () => {
-    prisma.user.findUnique.mockResolvedValueOnce(null);
-    prisma.user.update.mockResolvedValue({
-      id: 'user-1',
-      email: 'test@dstu.ru',
-      password: '$2b$10$hashed',
-      name: 'Иван Петров',
-      studentId: 'DSTU-2026-002',
-      role: Role.USER,
-      rating: 5,
-      createdAt: new Date('2026-04-04T00:00:00.000Z'),
-      updatedAt: new Date('2026-04-04T00:00:00.000Z'),
-    });
+  it('updates profile firstName/lastName', async () => {
+    prisma.user.update.mockResolvedValue({ ...mockUser, firstName: 'Пётр', lastName: 'Петров' });
 
     const result = await service.updateCurrentUser('user-1', {
-      name: 'Иван Петров',
-      studentId: 'DSTU-2026-002',
+      firstName: 'Пётр',
+      lastName: 'Петров',
     });
 
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'user-1' },
-      data: {
-        name: 'Иван Петров',
-        studentId: 'DSTU-2026-002',
-      },
+      data: { firstName: 'Пётр', lastName: 'Петров' },
     });
-    expect(result.studentId).toBe('DSTU-2026-002');
+    expect(result.name).toBe('Пётр Петров');
     expect(result).not.toHaveProperty('password');
-  });
-
-  it('throws conflict when student id belongs to another user', async () => {
-    prisma.user.findUnique.mockResolvedValueOnce({ id: 'other-user' } as never);
-
-    await expect(
-      service.updateCurrentUser('user-1', {
-        studentId: 'DSTU-2026-009',
-      }),
-    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('throws not found when user is missing', async () => {

@@ -3,8 +3,9 @@ export type Role = "USER" | "ADMIN";
 export interface User {
   id: string;
   email: string;
-  name: string;
-  studentId?: string | null;
+  firstName: string;
+  lastName: string;
+  name: string; // computed: `${firstName} ${lastName}`
   role: Role;
   rating: number;
   createdAt: string;
@@ -21,9 +22,9 @@ export interface LoginDto {
 }
 
 export interface RegisterDto {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  studentId?: string;
   password: string;
 }
 
@@ -55,6 +56,7 @@ export interface Booking {
   id: string;
   spaceId: string;
   space: Space;
+  user?: { id: string; name: string; email: string } | null;
   startTime: string;
   endTime: string;
   status: BookingStatus;

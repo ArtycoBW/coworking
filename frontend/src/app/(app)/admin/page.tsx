@@ -8,11 +8,13 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   ArrowLeft, Shield, Users, Calendar, Building2, BarChart3,
-  Loader2, Star, X, ChevronDown, Search,
+  Loader2, Star, X, Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/authStore";
+import { AnimatedGradientBackground } from "@/components/ui/animated-gradient-background";
 import { useAllUsers, useUpdateUser } from "@/hooks/useUsers";
 import { useAllBookings, useUpdateBookingStatus } from "@/hooks/useBookings";
 import { useSpaces } from "@/hooks/useSpaces";
@@ -121,7 +123,7 @@ function OverviewTab() {
 }
 
 // ── Users Tab ─────────────────────────────────────────────────────────────────
-function UsersTab() {
+function UsersTab({ currentUserId }: { currentUserId: string }) {
   const { data: users = [], isLoading } = useAllUsers();
   const updateUser = useUpdateUser();
 
@@ -162,10 +164,6 @@ function UsersTab() {
             <p style={{ fontFamily: "var(--font-heading)", fontSize: "13px", fontWeight: 600, color: "#e8edf5" }}>{u.name}</p>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: "11px", color: "rgba(136,146,164,0.55)" }}>{u.email}</p>
           </div>
-          {/* studentId */}
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "rgba(136,146,164,0.4)", minWidth: "120px" }}>
-            {u.studentId ?? "—"}
-          </span>
           {/* Role */}
           <button onClick={() => toggleRole(u.id, u.role)}
             className="px-2.5 py-1 rounded-lg transition-all hover:opacity-80"
@@ -178,7 +176,8 @@ function UsersTab() {
           {/* Rating */}
           <div className="flex items-center gap-1">
             <button onClick={() => adjustRating(u.id, u.rating, -0.5)}
-              className="size-6 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors"
+              disabled={u.id === currentUserId}
+              className="size-6 rounded-md flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
               style={{ fontFamily: "var(--font-heading)", fontSize: "14px", color: "rgba(136,146,164,0.6)" }}>−</button>
             <span className="flex items-center gap-1" style={{ minWidth: "36px", justifyContent: "center" }}>
               <Star className="size-3" style={{ color: "#f59e0b", fill: "#f59e0b" }} />
@@ -233,17 +232,19 @@ function BookingsTab() {
             style={{ fontFamily: "var(--font-sans)", fontSize: "12px", color: "#e8edf5" }} />
           {search && <button onClick={() => setSearch("")}><X className="size-3.5 text-white/30 hover:text-white/60" /></button>}
         </div>
-        <div className="relative">
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as BookingStatus | "ALL")}
-            className="appearance-none rounded-xl px-3 py-2 pr-8 outline-none cursor-pointer"
-            style={{ background: "rgba(16,20,32,0.75)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(200,210,230,0.8)", fontFamily: "var(--font-sans)", fontSize: "12px" }}>
-            <option value="ALL">Все статусы</option>
+        <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as BookingStatus | "ALL")}>
+          <SelectTrigger className="h-9 rounded-xl text-xs"
+            style={{ background: "rgba(16,20,32,0.75)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(200,210,230,0.8)", minWidth: "140px" }}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="border-white/8"
+            style={{ background: "rgba(16,20,32,0.97)", backdropFilter: "blur(16px)" }}>
+            <SelectItem value="ALL" className="text-xs focus:bg-white/8 focus:text-white rounded-lg">Все статусы</SelectItem>
             {(Object.keys(STATUS_MAP) as BookingStatus[]).map((s) => (
-              <option key={s} value={s}>{STATUS_MAP[s].label}</option>
+              <SelectItem key={s} value={s} className="text-xs focus:bg-white/8 focus:text-white rounded-lg">{STATUS_MAP[s].label}</SelectItem>
             ))}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3.5 pointer-events-none text-white/30" />
-        </div>
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.map((b, i) => (
@@ -348,7 +349,8 @@ export default function AdminPage() {
   if (!user || user.role !== "ADMIN") return null;
 
   return (
-    <div className="min-h-screen" style={{ background: "#0a0d14" }}>
+    <div className="min-h-screen relative" style={{ background: "#0a0d14" }}>
+      <AnimatedGradientBackground />
       <header
         className="sticky top-0 z-50 flex items-center gap-4 px-6 h-14"
         style={{ background: "rgba(10,13,20,0.85)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
@@ -370,8 +372,8 @@ export default function AdminPage() {
       <main className="px-6 py-8 max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Tabs defaultValue="overview">
-            <TabsList className="mb-6 h-10 gap-1"
-              style={{ background: "rgba(16,20,32,0.8)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "4px" }}>
+            <TabsList className="mb-8 h-11 gap-1"
+              style={{ background: "rgba(16,20,32,0.8)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "14px", padding: "4px" }}>
               {[
                 { value: "overview",  label: "Обзор",          icon: BarChart3 },
                 { value: "users",     label: "Пользователи",   icon: Users },
@@ -379,7 +381,7 @@ export default function AdminPage() {
                 { value: "spaces",    label: "Пространства",   icon: Building2 },
               ].map((t) => (
                 <TabsTrigger key={t.value} value={t.value}
-                  className="flex items-center gap-1.5 rounded-lg px-4 data-[state=active]:text-white data-[state=active]:bg-white/10"
+                  className="flex items-center gap-1.5 rounded-xl px-5 h-8 data-[state=active]:text-white data-[state=active]:bg-white/10"
                   style={{ fontFamily: "var(--font-heading)", fontSize: "12px", letterSpacing: "0.06em" }}>
                   <t.icon className="size-3.5" />
                   {t.label}
@@ -388,7 +390,7 @@ export default function AdminPage() {
             </TabsList>
 
             <TabsContent value="overview"><OverviewTab /></TabsContent>
-            <TabsContent value="users"><UsersTab /></TabsContent>
+            <TabsContent value="users"><UsersTab currentUserId={user.id} /></TabsContent>
             <TabsContent value="bookings"><BookingsTab /></TabsContent>
             <TabsContent value="spaces"><SpacesTab /></TabsContent>
           </Tabs>

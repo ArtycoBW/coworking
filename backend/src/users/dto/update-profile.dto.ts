@@ -2,16 +2,17 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateProfileDto {
-  @ApiPropertyOptional({ example: 'Иван Иванов' })
+  @ApiPropertyOptional({ example: 'Иван' })
   @IsOptional()
   @IsString()
-  @MinLength(2)
-  @MaxLength(120)
-  name?: string;
+  @MinLength(1)
+  @MaxLength(60)
+  firstName?: string;
 
-  @ApiPropertyOptional({ example: 'DSTU-2026-002' })
+  @ApiPropertyOptional({ example: 'Иванов' })
   @IsOptional()
   @IsString()
-  @MaxLength(64)
-  studentId?: string;
+  @MinLength(1)
+  @MaxLength(60)
+  lastName?: string;
 }

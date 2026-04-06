@@ -89,11 +89,17 @@ export class BookingsService {
     });
   }
 
-  findAll() {
-    return this.prisma.booking.findMany({
-      include: { space: true, user: { select: { id: true, name: true, email: true } } },
+  async findAll() {
+    const rows = await this.prisma.booking.findMany({
+      include: { space: true, user: { select: { id: true, firstName: true, lastName: true, email: true } } },
       orderBy: { createdAt: 'desc' },
     });
+    return rows.map((b) => ({
+      ...b,
+      user: b.user
+        ? { id: b.user.id, name: `${b.user.firstName} ${b.user.lastName}`.trim(), email: b.user.email }
+        : null,
+    }));
   }
 
   async cancel(id: string, userId: string) {
@@ -131,11 +137,17 @@ export class BookingsService {
     });
     if (!booking) throw new NotFoundException('Бронирование не найдено');
 
-    const updated = await this.prisma.booking.update({
+    const raw = await this.prisma.booking.update({
       where: { id },
       data: { status },
-      include: { space: true, user: { select: { id: true, name: true, email: true } } },
+      include: { space: true, user: { select: { id: true, firstName: true, lastName: true, email: true } } },
     });
+    const updated = {
+      ...raw,
+      user: raw.user
+        ? { id: raw.user.id, name: `${raw.user.firstName} ${raw.user.lastName}`.trim(), email: raw.user.email }
+        : null,
+    };
 
     // Notify the user about admin status change
     await this.notifications.createAndPush(

@@ -10,6 +10,18 @@ describe('AuthService', () => {
   let prisma: jest.Mocked<Pick<PrismaService, 'user'>>;
   let jwtService: jest.Mocked<Pick<JwtService, 'sign'>>;
 
+  const mockUser = {
+    id: 'user-1',
+    email: 'test@dstu.ru',
+    password: '$2b$10$hashed',
+    firstName: 'Иван',
+    lastName: 'Иванов',
+    role: Role.USER,
+    rating: 5,
+    createdAt: new Date('2026-04-04T00:00:00.000Z'),
+    updatedAt: new Date('2026-04-04T00:00:00.000Z'),
+  };
+
   beforeEach(() => {
     prisma = {
       user: {
@@ -29,24 +41,14 @@ describe('AuthService', () => {
   });
 
   it('registers a new user and returns token without password', async () => {
-    prisma.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-    prisma.user.create.mockResolvedValue({
-      id: 'user-1',
-      email: 'test@dstu.ru',
-      password: '$2b$10$hashed',
-      name: 'Иван Иванов',
-      studentId: 'DSTU-2026-001',
-      role: Role.USER,
-      rating: 5,
-      createdAt: new Date('2026-04-04T00:00:00.000Z'),
-      updatedAt: new Date('2026-04-04T00:00:00.000Z'),
-    });
+    prisma.user.findUnique.mockResolvedValueOnce(null);
+    prisma.user.create.mockResolvedValue(mockUser);
 
     const result = await service.register({
       email: 'test@dstu.ru',
       password: 'Test123!',
-      name: 'Иван Иванов',
-      studentId: 'DSTU-2026-001',
+      firstName: 'Иван',
+      lastName: 'Иванов',
     });
 
     expect(prisma.user.create).toHaveBeenCalled();
@@ -54,8 +56,9 @@ describe('AuthService', () => {
     expect(result.user).toMatchObject({
       id: 'user-1',
       email: 'test@dstu.ru',
+      firstName: 'Иван',
+      lastName: 'Иванов',
       name: 'Иван Иванов',
-      studentId: 'DSTU-2026-001',
       role: Role.USER,
       rating: 5,
     });
@@ -69,7 +72,8 @@ describe('AuthService', () => {
       service.register({
         email: 'test@dstu.ru',
         password: 'Test123!',
-        name: 'Иван Иванов',
+        firstName: 'Иван',
+        lastName: 'Иванов',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
@@ -77,17 +81,7 @@ describe('AuthService', () => {
   it('logs in a user with valid credentials', async () => {
     const hashedPassword = await bcrypt.hash('Test123!', 10);
 
-    prisma.user.findUnique.mockResolvedValue({
-      id: 'user-1',
-      email: 'test@dstu.ru',
-      password: hashedPassword,
-      name: 'Иван Иванов',
-      studentId: null,
-      role: Role.USER,
-      rating: 5,
-      createdAt: new Date('2026-04-04T00:00:00.000Z'),
-      updatedAt: new Date('2026-04-04T00:00:00.000Z'),
-    });
+    prisma.user.findUnique.mockResolvedValue({ ...mockUser, password: hashedPassword });
 
     const result = await service.login({
       email: 'test@dstu.ru',
