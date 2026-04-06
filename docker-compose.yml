@@ -22,10 +22,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: garage_backend
+    env_file:
+      - ./backend/.env
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://garage_user:change_this_password@postgres:5432/garage_db}
-      JWT_SECRET: ${JWT_SECRET:-change_this_to_random_64_char_string}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-get_from_aistudio.google.com}
       PORT: ${PORT:-3001}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
     depends_on:

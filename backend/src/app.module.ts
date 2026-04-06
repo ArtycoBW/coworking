@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AiModule } from './ai/ai.module';
 import { AuthModule } from './auth/auth.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -14,6 +15,7 @@ import { WebsocketModule } from './websocket/websocket.module';
   imports: [
     ScheduleModule.forRoot(),
     PrismaModule,
+    AiModule,
     AuthModule,
     UsersModule,
     SpacesModule,

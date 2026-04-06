@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   LogOut, LayoutDashboard, Calendar, Clock, Wifi, Users,
-  Bell, CheckCheck, MapPin, ArrowRight, Loader2, X, TrendingUp, Shield,
+  Bell, CheckCheck, MapPin, ArrowRight, Loader2, X, TrendingUp, Shield, Sparkles,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -336,6 +336,14 @@ export default function DashboardPage() {
           >
             <Clock className="size-4" />
             <span style={{ fontFamily: "var(--font-heading)", fontSize: "12px", letterSpacing: "0.08em" }}>История броней</span>
+          </button>
+          <button
+            onClick={() => router.push("/chat")}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all hover:bg-[rgba(167,139,250,0.1)]"
+            style={{ border: "1px solid rgba(167,139,250,0.2)", color: "rgba(167,139,250,0.8)" }}
+          >
+            <Sparkles className="size-4" />
+            <span style={{ fontFamily: "var(--font-heading)", fontSize: "12px", letterSpacing: "0.08em" }}>AI Ассистент</span>
           </button>
         </motion.div>
 
