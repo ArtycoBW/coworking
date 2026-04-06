@@ -4,13 +4,17 @@ import {
 } from '@nestjs/common';
 import { SpaceStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsGateway } from '../websocket/notifications.gateway';
 import { AvailabilityQueryDto } from './dto/availability-query.dto';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
 
 @Injectable()
 export class SpacesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: NotificationsGateway,
+  ) {}
 
   findAll() {
     return this.prisma.space.findMany({
@@ -67,7 +71,12 @@ export class SpacesService {
 
   async update(id: string, dto: UpdateSpaceDto) {
     await this.findOne(id);
-    return this.prisma.space.update({ where: { id }, data: dto });
+    const updated = await this.prisma.space.update({ where: { id }, data: dto });
+    // Broadcast status change so 3D map updates in real-time
+    if (dto.status) {
+      this.gateway.broadcastSpaceStatusChanged(id, dto.status);
+    }
+    return updated;
   }
 
   async remove(id: string) {

@@ -3,7 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { useSocket } from "@/hooks/useSocket";
 import { Loader2 } from "lucide-react";
+
+function SocketProvider({ children }: { children: React.ReactNode }) {
+  useSocket();
+  return <>{children}</>;
+}
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, _hasHydrated } = useAuthStore();
@@ -23,5 +29,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return <SocketProvider>{children}</SocketProvider>;
 }

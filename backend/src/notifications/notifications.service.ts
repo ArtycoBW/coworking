@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsGateway } from '../websocket/notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: NotificationsGateway,
+  ) {}
 
   findAll(userId: string) {
     return this.prisma.notification.findMany({
@@ -25,5 +29,19 @@ export class NotificationsService {
       where: { userId, read: false },
       data: { read: true },
     });
+  }
+
+  /** Create notification and push it via WebSocket */
+  async createAndPush(userId: string, title: string, message: string) {
+    const notification = await this.prisma.notification.create({
+      data: { userId, title, message },
+    });
+    this.gateway.sendNotificationToUser(userId, {
+      id: notification.id,
+      title: notification.title,
+      message: notification.message,
+      createdAt: notification.createdAt,
+    });
+    return notification;
   }
 }
