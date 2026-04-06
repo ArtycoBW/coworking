@@ -48,3 +48,24 @@ export interface Space {
   posZ: number;
   createdAt: string;
 }
+
+export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED" | "NO_SHOW";
+
+export interface Booking {
+  id: string;
+  spaceId: string;
+  space: Space;
+  startTime: string;
+  endTime: string;
+  status: BookingStatus;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}

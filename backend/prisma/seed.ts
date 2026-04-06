@@ -8,35 +8,16 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0]);
 
-// Organic layout — fits within RW=24, RD=20 room.
-// Meeting rooms occupy x ∈ [-12,-6.5] and x ∈ [6.5,12], so desks stay in x ∈ [-5.5,5.5]
+// 8 desks, well-spaced 2×4 grid in the centre area x ∈ [-4.5,4.5], z ∈ [-7,3]
 const deskPositions = [
-  // Cluster A: top-left pod (2×2)
-  { posX: -4.5, posZ: -6.5 }, // A1
-  { posX: -2.5, posZ: -6.5 }, // A2
-  { posX: -4.5, posZ: -4.5 }, // A3
-  { posX: -2.5, posZ: -4.5 }, // A4
-  // Cluster B: top-right (pair + L)
-  { posX:  0.5, posZ: -6.5 }, // B1
-  { posX:  2.5, posZ: -6.5 }, // B2
-  { posX:  4.5, posZ: -6.5 }, // B3
-  { posX:  4.5, posZ: -4.5 }, // B4 (L below B3)
-  // Cluster C: mid-left (L shape)
-  { posX: -5.0, posZ: -1.5 }, // C1
-  { posX: -3.0, posZ: -1.5 }, // C2
-  { posX: -5.0, posZ:  0.5 }, // C3
-  // Centre singles
-  { posX: -0.5, posZ: -2.0 }, // C4
-  { posX:  1.5, posZ: -2.0 }, // D1
-  // Cluster D: right-mid
-  { posX:  3.5, posZ: -3.0 }, // D2
-  { posX:  5.0, posZ: -3.0 }, // D3
-  { posX:  5.0, posZ: -1.0 }, // D4
-  // Cluster E: bottom
-  { posX: -3.5, posZ:  3.5 }, // E1
-  { posX: -1.5, posZ:  3.5 }, // E2
-  { posX:  0.5, posZ:  4.0 }, // E3
-  { posX:  3.0, posZ:  3.5 }, // E4
+  { posX: -4.5, posZ: -7.0 }, // A1
+  { posX: -1.5, posZ: -7.0 }, // A2
+  { posX:  1.5, posZ: -7.0 }, // A3
+  { posX:  4.5, posZ: -7.0 }, // A4
+  { posX: -4.5, posZ: -2.5 }, // B1
+  { posX: -1.5, posZ: -2.5 }, // B2
+  { posX:  1.5, posZ: -2.5 }, // B3
+  { posX:  4.5, posZ: -2.5 }, // B4
 ];
 
 const desks = deskPositions.map((pos, i) => ({
@@ -97,7 +78,30 @@ async function main() {
 
   await prisma.space.createMany({ data: [...desks, ...meetingRooms] });
 
-  console.log(`✓ Seed completed: 2 users, ${desks.length} desks, ${meetingRooms.length} meeting rooms`);
+  // Add some occupied bookings for April 6, 10, 15 so the map shows red spots
+  const testUser = await prisma.user.findUnique({ where: { email: 'test@dstu.ru' } });
+  const allSpaces = await prisma.space.findMany({ where: { type: SpaceType.DESK } });
+
+  if (testUser && allSpaces.length >= 4) {
+    const mkDate = (day: number, startH: number, endH: number) => ({
+      startTime: new Date(`2026-04-${String(day).padStart(2,'0')}T${String(startH).padStart(2,'0')}:00:00.000Z`),
+      endTime:   new Date(`2026-04-${String(day).padStart(2,'0')}T${String(endH).padStart(2,'0')}:00:00.000Z`),
+    });
+
+    const bookingsData = [
+      { userId: testUser.id, spaceId: allSpaces[0].id, ...mkDate(6, 7, 11),  status: 'CONFIRMED' as const },
+      { userId: testUser.id, spaceId: allSpaces[1].id, ...mkDate(6, 9, 13),  status: 'CONFIRMED' as const },
+      { userId: testUser.id, spaceId: allSpaces[2].id, ...mkDate(10, 8, 12), status: 'CONFIRMED' as const },
+      { userId: testUser.id, spaceId: allSpaces[3].id, ...mkDate(10, 10, 14),status: 'CONFIRMED' as const },
+      { userId: testUser.id, spaceId: allSpaces[0].id, ...mkDate(15, 9, 17), status: 'CONFIRMED' as const },
+      { userId: testUser.id, spaceId: allSpaces[2].id, ...mkDate(15, 8, 11), status: 'CONFIRMED' as const },
+    ];
+
+    await prisma.booking.createMany({ data: bookingsData });
+    console.log(`✓ Seed completed: 2 users, ${desks.length} desks, ${meetingRooms.length} meeting rooms, ${bookingsData.length} bookings`);
+  } else {
+    console.log(`✓ Seed completed: 2 users, ${desks.length} desks, ${meetingRooms.length} meeting rooms`);
+  }
 }
 
 main()

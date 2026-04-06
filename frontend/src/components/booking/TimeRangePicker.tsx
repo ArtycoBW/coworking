@@ -7,6 +7,7 @@ import { Clock, X } from "lucide-react";
 interface TimeRangePickerProps {
   startTime: string;
   endTime: string;
+  selectedDate?: Date;
   onStartChange: (v: string) => void;
   onEndChange: (v: string) => void;
 }
@@ -30,11 +31,31 @@ function toMins(t: string) {
   return h * 60 + m;
 }
 
-export function TimeRangePicker({ startTime, endTime, onStartChange, onEndChange }: TimeRangePickerProps) {
+function isToday(date?: Date) {
+  if (!date) return false;
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+export function TimeRangePicker({ startTime, endTime, selectedDate, onStartChange, onEndChange }: TimeRangePickerProps) {
   const [picking, setPicking] = useState<"start" | "end">("start");
 
   const startMin = toMins(startTime);
   const endMin = toMins(endTime);
+
+  // For today: disable slots in the past (round up to next 30-min slot)
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  // round up to next 30-min boundary
+  const minAllowedMins = isToday(selectedDate)
+    ? Math.ceil(nowMins / 30) * 30
+    : 0;
+
+  const isPastSlot = (slot: string) => toMins(slot) < minAllowedMins;
 
   const handleClick = (slot: string) => {
     const slotMin = toMins(slot);
@@ -110,7 +131,8 @@ export function TimeRangePicker({ startTime, endTime, onStartChange, onEndChange
             const isStart = slot === startTime;
             const isEnd = slot === endTime;
             const inRange = startTime && endTime && slotMin > startMin && slotMin < endMin;
-            const isDisabled = picking === "end" && slotMin <= startMin;
+            const isPast = isPastSlot(slot);
+            const isDisabled = isPast || (picking === "end" && slotMin <= startMin);
 
             let bg = "rgba(22,27,39,0.6)";
             let border = "rgba(255,255,255,0.06)";
@@ -124,6 +146,10 @@ export function TimeRangePicker({ startTime, endTime, onStartChange, onEndChange
               bg = "rgba(79,142,247,0.15)";
               border = "rgba(79,142,247,0.3)";
               color = "#7eb3fa";
+            } else if (isPast) {
+              bg = "rgba(10,12,18,0.4)";
+              border = "rgba(255,255,255,0.02)";
+              color = "rgba(136,146,164,0.15)";
             } else if (isDisabled) {
               bg = "rgba(15,17,23,0.3)";
               border = "rgba(255,255,255,0.03)";
@@ -147,6 +173,8 @@ export function TimeRangePicker({ startTime, endTime, onStartChange, onEndChange
                   fontSize: "11px",
                   cursor: isDisabled ? "not-allowed" : "pointer",
                   transition: "background 0.15s, color 0.15s",
+                  textDecoration: isPast ? "line-through" : "none",
+                  opacity: isPast ? 0.4 : 1,
                 }}
               >
                 {slot}

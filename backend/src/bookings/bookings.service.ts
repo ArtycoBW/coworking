@@ -1,0 +1,143 @@
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { BookingStatus } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateBookingDto } from './dto/create-booking.dto';
+
+@Injectable()
+export class BookingsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(userId: string, dto: CreateBookingDto) {
+    const start = new Date(dto.startTime);
+    const end = new Date(dto.endTime);
+    const now = new Date();
+
+    // 1. endTime > startTime
+    if (end <= start) {
+      throw new BadRequestException('Время окончания должно быть позже начала');
+    }
+
+    // 2. startTime >= now
+    if (start < now) {
+      throw new BadRequestException('Нельзя бронировать в прошлом');
+    }
+
+    // 3. Business hours 08:00–22:00 (local check via UTC hours; seed data uses UTC)
+    const startH = start.getUTCHours();
+    const endH = end.getUTCHours();
+    const endM = end.getUTCMinutes();
+    if (startH < 8 || endH > 22 || (endH === 22 && endM > 0)) {
+      throw new BadRequestException('Бронирование доступно с 08:00 до 22:00');
+    }
+
+    // 4. Space exists and not MAINTENANCE
+    const space = await this.prisma.space.findUnique({ where: { id: dto.spaceId } });
+    if (!space) throw new NotFoundException('Пространство не найдено');
+    if (space.status === 'MAINTENANCE') {
+      throw new BadRequestException('Пространство на обслуживании');
+    }
+
+    // 5. No overlapping active booking for that space
+    const overlap = await this.prisma.booking.findFirst({
+      where: {
+        spaceId: dto.spaceId,
+        status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        startTime: { lt: end },
+        endTime:   { gt: start },
+      },
+    });
+    if (overlap) {
+      throw new ConflictException('Пространство уже занято в этот период');
+    }
+
+    // 6. User rating >= 2.0
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Пользователь не найден');
+    if (user.rating < 2.0) {
+      throw new ForbiddenException(
+        `Бронирование недоступно: ваш рейтинг ${user.rating.toFixed(1)} ниже минимального (2.0)`,
+      );
+    }
+
+    // Create booking + notification in transaction
+    const [booking] = await this.prisma.$transaction([
+      this.prisma.booking.create({
+        data: {
+          userId,
+          spaceId: dto.spaceId,
+          startTime: start,
+          endTime: end,
+          status: BookingStatus.CONFIRMED,
+          notes: dto.notes,
+        },
+        include: { space: true },
+      }),
+      this.prisma.notification.create({
+        data: {
+          userId,
+          title: 'Бронирование подтверждено',
+          message: `${space.name} · ${this.formatTime(start)} – ${this.formatTime(end)}`,
+        },
+      }),
+    ]);
+
+    return booking;
+  }
+
+  findMy(userId: string) {
+    return this.prisma.booking.findMany({
+      where: { userId },
+      include: { space: true },
+      orderBy: { startTime: 'desc' },
+    });
+  }
+
+  findAll() {
+    return this.prisma.booking.findMany({
+      include: { space: true, user: { select: { id: true, name: true, email: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async cancel(id: string, userId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+      include: { space: true },
+    });
+    if (!booking) throw new NotFoundException('Бронирование не найдено');
+    if (booking.userId !== userId) throw new ForbiddenException('Нет доступа');
+    if (
+      booking.status !== BookingStatus.PENDING &&
+      booking.status !== BookingStatus.CONFIRMED
+    ) {
+      throw new BadRequestException('Нельзя отменить бронирование в текущем статусе');
+    }
+
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.booking.update({
+        where: { id },
+        data: { status: BookingStatus.CANCELLED },
+        include: { space: true },
+      }),
+      this.prisma.notification.create({
+        data: {
+          userId,
+          title: 'Бронирование отменено',
+          message: `${booking.space.name} · ${this.formatTime(booking.startTime)} – ${this.formatTime(booking.endTime)}`,
+        },
+      }),
+    ]);
+
+    return updated;
+  }
+
+  private formatTime(d: Date) {
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+  }
+}

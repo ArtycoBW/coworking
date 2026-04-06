@@ -10,11 +10,10 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, LayoutGrid, Box, Search, Loader2,
-  Calendar as CalendarIcon, Clock, Users, CheckCircle2, Armchair,
+  Calendar as CalendarIcon, Clock, Users, CheckCircle2, Armchair, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingModal } from "@/components/booking/BookingModal";
 import { Map3DErrorBoundary } from "@/components/booking/Map3DErrorBoundary";
@@ -48,7 +47,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p style={{
       fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.28em",
-      color: "#4f8ef7", textTransform: "uppercase", marginBottom: "10px",
+      color: "#4f8ef7", textTransform: "uppercase", marginBottom: "8px",
     }}>
       {children}
     </p>
@@ -58,7 +57,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function GlassCard({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
     <div
-      className={`rounded-2xl p-4 ${className}`}
+      className={`rounded-xl p-3 ${className}`}
       style={{
         background: "rgba(22,27,39,0.7)",
         border: "1px solid rgba(255,255,255,0.07)",
@@ -93,7 +92,6 @@ export default function BookingPage() {
   const displaySpaces = allSpaces.filter((s) => s.type === spaceType);
   const totalCount = displaySpaces.length;
   const freeCount = displaySpaces.filter((s) => availableIds.includes(s.id)).length;
-
 
   const getDateTime = useCallback((timeStr: string): Date | null => {
     if (!date) return null;
@@ -139,6 +137,8 @@ export default function BookingPage() {
       setSelectedSpace(null);
       setAvailabilityParams(null);
       void queryClient.invalidateQueries({ queryKey: ["spaces"] });
+      void queryClient.invalidateQueries({ queryKey: ["bookings", "my"] });
+      void queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
       toast.error(err.response?.data?.message ?? "Ошибка при бронировании");
@@ -149,10 +149,14 @@ export default function BookingPage() {
   const endDt = getDateTime(endTimeStr);
   const canBook = !!selectedSpace && !!startDt && !!endDt && !!availabilityParams;
 
+  // Checked = availability was requested
+  const checked = !!availabilityParams;
+
   return (
-    <div className="min-h-screen bg-[#0f1117] flex flex-col">
+    <div className="h-screen bg-[#0f1117] flex flex-col overflow-hidden">
+      {/* ── Header ── */}
       <header
-        className="sticky top-0 z-50 flex items-center gap-4 px-6 h-14"
+        className="flex-shrink-0 flex items-center gap-4 px-6 h-14 z-50"
         style={{
           background: "rgba(15,17,23,0.85)",
           backdropFilter: "blur(20px)",
@@ -177,8 +181,8 @@ export default function BookingPage() {
           </span>
         </div>
 
-        {availabilityParams && (
-          <div className="flex items-center gap-3 ml-4">
+        {checked && (
+          <div className="flex items-center gap-2 ml-4">
             <div
               className="flex items-center gap-2 px-3 py-1 rounded-full"
               style={{ background: "rgba(79,142,247,0.1)", border: "1px solid rgba(79,142,247,0.2)" }}
@@ -218,29 +222,37 @@ export default function BookingPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      {/* ── Body ── */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* ── Sidebar ── */}
         <motion.aside
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-[290px] flex-shrink-0 flex flex-col gap-3 p-4 overflow-y-auto"
+          className="w-[272px] flex-shrink-0 flex flex-col gap-2.5 p-3 overflow-y-auto"
           style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}
         >
+          {/* Space type */}
           <GlassCard>
             <SectionLabel>Тип места</SectionLabel>
-            <Tabs value={spaceType} onValueChange={(v) => { setSpaceType(v as SpaceType); setSelectedSpace(null); setAvailabilityParams(null); }}>
-              <TabsList className="w-full h-9" style={{ background: "rgba(15,17,23,0.6)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <TabsTrigger value="DESK" className="flex-1 gap-1.5 text-xs data-[state=active]:text-white data-[state=active]:bg-primary/20" style={{ fontFamily: "var(--font-heading)" }}>
+            <Tabs value={spaceType} onValueChange={(v) => {
+              setSpaceType(v as SpaceType);
+              setSelectedSpace(null);
+              setAvailabilityParams(null);
+            }}>
+              <TabsList className="w-full h-8" style={{ background: "rgba(15,17,23,0.6)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <TabsTrigger value="DESK" className="flex-1 gap-1 text-xs data-[state=active]:text-white data-[state=active]:bg-primary/20" style={{ fontFamily: "var(--font-heading)" }}>
                   <Armchair className="size-3" /> Рабочее
                 </TabsTrigger>
-                <TabsTrigger value="MEETING_ROOM" className="flex-1 gap-1.5 text-xs data-[state=active]:text-white data-[state=active]:bg-primary/20" style={{ fontFamily: "var(--font-heading)" }}>
+                <TabsTrigger value="MEETING_ROOM" className="flex-1 gap-1 text-xs data-[state=active]:text-white data-[state=active]:bg-primary/20" style={{ fontFamily: "var(--font-heading)" }}>
                   <Users className="size-3" /> Переговорная
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </GlassCard>
 
-          <GlassCard style={{ background: "transparent" }}>
+          {/* Date */}
+          <GlassCard style={{ background: "transparent", padding: "8px" }}>
             <SectionLabel>Дата</SectionLabel>
             <Calendar
               mode="single"
@@ -252,20 +264,56 @@ export default function BookingPage() {
             />
           </GlassCard>
 
-          <GlassCard>
-            <SectionLabel>Время</SectionLabel>
-            <TimeRangePicker
-              startTime={startTimeStr}
-              endTime={endTimeStr}
-              onStartChange={(v) => { setStartTimeStr(v); setAvailabilityParams(null); }}
-              onEndChange={(v) => { setEndTimeStr(v); setAvailabilityParams(null); }}
-            />
-          </GlassCard>
+          {/* Time — full picker OR compact summary depending on state */}
+          <AnimatePresence mode="wait">
+            {!checked ? (
+              <motion.div key="time-picker"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+              >
+                <GlassCard>
+                  <SectionLabel>Время</SectionLabel>
+                  <TimeRangePicker
+                    startTime={startTimeStr}
+                    endTime={endTimeStr}
+                    selectedDate={date}
+                    onStartChange={(v) => { setStartTimeStr(v); }}
+                    onEndChange={(v) => { setEndTimeStr(v); }}
+                  />
+                </GlassCard>
+              </motion.div>
+            ) : (
+              <motion.div key="time-summary"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+              >
+                <div
+                  className="flex items-center justify-between rounded-xl px-3 py-2.5"
+                  style={{ background: "rgba(79,142,247,0.1)", border: "1px solid rgba(79,142,247,0.2)" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Clock className="size-3.5 text-primary/70" />
+                    <span style={{ fontFamily: "var(--font-tech)", fontSize: "13px", color: "#e8edf5" }}>
+                      {startTimeStr} → {endTimeStr}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { setAvailabilityParams(null); setSelectedSpace(null); }}
+                    className="flex items-center gap-1 rounded-full px-2 py-0.5 hover:bg-white/10 transition-colors"
+                    style={{ fontFamily: "var(--font-sans)", fontSize: "10px", color: "rgba(136,146,164,0.7)" }}
+                  >
+                    <Pencil className="size-2.5" /> Изменить
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
+          {/* Check button */}
           <Button
             onClick={handleCheckAvailability}
             disabled={isFetching}
-            className="w-full h-10 rounded-xl gap-2"
+            className="w-full h-9 rounded-xl gap-2 flex-shrink-0"
             style={{
               background: isFetching ? "rgba(79,142,247,0.3)" : "rgba(79,142,247,0.9)",
               boxShadow: "0 0 24px rgba(79,142,247,0.2)",
@@ -276,121 +324,119 @@ export default function BookingPage() {
           >
             {isFetching
               ? <><Loader2 className="size-3.5 animate-spin" /> Проверяем...</>
-              : <><Search className="size-3.5" /> Проверить доступность</>
+              : <><Search className="size-3.5" /> {checked ? "Обновить" : "Проверить доступность"}</>
             }
           </Button>
 
+          {/* After check: legend + selected space */}
           <AnimatePresence>
-            {availabilityParams && (
+            {checked && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}
+                className="space-y-2.5"
               >
+                {/* Legend */}
                 <GlassCard>
                   <SectionLabel>Легенда</SectionLabel>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {[
                       { color: "#4f8ef7", bg: "rgba(79,142,247,0.15)", label: "Свободно" },
                       { color: "#ef4444", bg: "rgba(239,68,68,0.15)", label: "Занято" },
                       { color: "#34d399", bg: "rgba(52,211,153,0.15)", label: "Выбрано" },
                     ].map((l) => (
-                      <div key={l.label} className="flex items-center gap-2.5">
-                        <div className="size-3 rounded flex-shrink-0" style={{ background: l.bg, border: `1px solid ${l.color}` }} />
-                        <span style={{ fontSize: "12px", color: "rgba(200,210,230,0.7)", fontFamily: "var(--font-sans)" }}>{l.label}</span>
+                      <div key={l.label} className="flex items-center gap-2">
+                        <div className="size-2.5 rounded flex-shrink-0" style={{ background: l.bg, border: `1px solid ${l.color}` }} />
+                        <span style={{ fontSize: "11px", color: "rgba(200,210,230,0.7)", fontFamily: "var(--font-sans)" }}>{l.label}</span>
                       </div>
                     ))}
                   </div>
                 </GlassCard>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
-          <AnimatePresence>
-            {selectedSpace && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <div
-                  className="rounded-2xl overflow-hidden"
-                  style={{
-                    background: "rgba(26,139,58,0.06)",
-                    border: "1px solid rgba(52,211,153,0.25)",
-                    boxShadow: "0 0 24px rgba(52,211,153,0.06)",
-                  }}
-                >
-                  <div className="px-4 pt-4 pb-3">
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
-                        <p style={{ fontFamily: "var(--font-heading)", fontSize: "14px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
-                          {selectedSpace.type === "DESK"
-                            ? selectedSpace.name.replace("Desk ", "Рабочее место ")
-                            : selectedSpace.name.replace("Meeting Room ", "Переговорная ")}
-                        </p>
-                        <p style={{ fontSize: "11px", color: "rgba(136,146,164,0.7)", marginTop: "3px" }}>
-                          {selectedSpace.type === "DESK" ? "Рабочее место" : `Переговорная · ${selectedSpace.capacity} чел.`}
-                        </p>
-                        {startDt && endDt && (
-                          <p style={{ fontFamily: "var(--font-tech)", fontSize: "13px", fontWeight: 600, color: "#4f8ef7", marginTop: "6px" }}>
-                            {formatPrice(calcTotal(selectedSpace.type, startDt, endDt))}
+                {/* Selected space */}
+                {selectedSpace && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="rounded-xl overflow-hidden"
+                    style={{
+                      background: "rgba(26,139,58,0.06)",
+                      border: "1px solid rgba(52,211,153,0.25)",
+                      boxShadow: "0 0 20px rgba(52,211,153,0.06)",
+                    }}
+                  >
+                    <div className="px-3 pt-3 pb-3">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <p style={{ fontFamily: "var(--font-heading)", fontSize: "13px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+                            {selectedSpace.type === "DESK"
+                              ? selectedSpace.name.replace("Desk ", "Рабочее место ")
+                              : selectedSpace.name.replace("Meeting Room ", "Переговорная ")}
                           </p>
-                        )}
+                          <p style={{ fontSize: "11px", color: "rgba(136,146,164,0.7)", marginTop: "2px" }}>
+                            {selectedSpace.type === "DESK" ? "Рабочее место" : `${selectedSpace.capacity} чел.`}
+                          </p>
+                          {startDt && endDt && (
+                            <p style={{ fontFamily: "var(--font-tech)", fontSize: "13px", fontWeight: 600, color: "#4f8ef7", marginTop: "4px" }}>
+                              {formatPrice(calcTotal(selectedSpace.type, startDt, endDt))}
+                            </p>
+                          )}
+                        </div>
+                        <CheckCircle2 className="size-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                       </div>
-                      <CheckCircle2 className="size-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                    </div>
 
-                    {date && (
-                      <div
-                        className="rounded-xl px-3 py-2 mb-3 space-y-1"
-                        style={{ background: "rgba(15,17,23,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}
+                      {date && (
+                        <div className="rounded-lg px-2.5 py-1.5 mb-2 space-y-1"
+                          style={{ background: "rgba(15,17,23,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                          <div className="flex items-center gap-1.5">
+                            <CalendarIcon className="size-2.5 text-primary/60" />
+                            <span style={{ fontSize: "10px", color: "rgba(200,210,230,0.7)", fontFamily: "var(--font-sans)" }}>
+                              {format(date, "d MMMM yyyy", { locale: ru })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="size-2.5 text-primary/60" />
+                            <span style={{ fontSize: "10px", color: "rgba(200,210,230,0.7)", fontFamily: "var(--font-tech)" }}>
+                              {startTimeStr} — {endTimeStr}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={() => setShowModal(true)}
+                        disabled={!canBook}
+                        className="w-full h-8 rounded-lg gap-1"
+                        style={{
+                          background: "rgba(22,160,70,0.85)",
+                          boxShadow: "0 0 16px rgba(34,197,94,0.15)",
+                          fontFamily: "var(--font-heading)",
+                          fontSize: "11px",
+                          letterSpacing: "0.1em",
+                        }}
                       >
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="size-3 text-primary/60" />
-                          <span style={{ fontSize: "11px", color: "rgba(200,210,230,0.7)", fontFamily: "var(--font-sans)" }}>
-                            {format(date, "d MMMM yyyy", { locale: ru })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="size-3 text-primary/60" />
-                          <span style={{ fontSize: "11px", color: "rgba(200,210,230,0.7)", fontFamily: "var(--font-tech)" }}>
-                            {startTimeStr} — {endTimeStr}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      onClick={() => setShowModal(true)}
-                      disabled={!canBook}
-                      className="w-full h-9 rounded-xl gap-1.5"
-                      style={{
-                        background: "rgba(22,160,70,0.85)",
-                        boxShadow: "0 0 20px rgba(34,197,94,0.15)",
-                        fontFamily: "var(--font-heading)",
-                        fontSize: "12px",
-                        letterSpacing: "0.1em",
-                      }}
-                    >
-                      <CheckCircle2 className="size-3.5" /> Забронировать
-                    </Button>
-                  </div>
-                </div>
+                        <CheckCircle2 className="size-3" /> Забронировать
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </motion.aside>
 
+        {/* ── Map area ── */}
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex-1 relative overflow-hidden"
         >
-          {!availabilityParams && (
+          {!checked && (
             <div
               className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-4 py-2 rounded-full pointer-events-none"
               style={{
