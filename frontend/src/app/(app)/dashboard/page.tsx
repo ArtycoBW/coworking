@@ -10,6 +10,7 @@ import {
   LogOut, LayoutDashboard, Calendar, Clock, Wifi, Users,
   Bell, CheckCheck, MapPin, ArrowRight, Loader2, X, TrendingUp, Shield, Sparkles,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { AnimatedGradientBackground } from "@/components/ui/animated-gradient-background";
@@ -46,7 +47,7 @@ function StatusBadge({ status }: { status: Booking["status"] }) {
 interface StatCardProps {
   label: string;
   value: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   color: string;
   delay?: number;
   trend?: string;

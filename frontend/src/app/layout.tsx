@@ -3,6 +3,7 @@ import { Inter, Space_Mono, Space_Grotesk, Chakra_Petch } from "next/font/google
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { PageLoader } from "@/components/shared/PageLoader";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,10 +33,15 @@ export const metadata: Metadata = {
   metadataBase: new URL("http://localhost:3000"),
   title: {
     default: "Garage Coworking",
-    template: "%s | Garage Coworking",
+    template: "%s | Garage",
   },
   description:
     "Платформа для бронирования рабочих мест, переговорных и управления коворкингом Garage при ДГТУ.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -56,6 +62,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full bg-background text-foreground antialiased">
+        <PageLoader />
         <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />
       </body>

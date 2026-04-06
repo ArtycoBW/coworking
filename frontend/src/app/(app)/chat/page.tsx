@@ -331,14 +331,15 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className="relative z-10 flex-shrink-0 px-4 pb-5 pt-2">
+      <div className="relative z-10 flex-shrink-0 px-4 pb-6 pt-3">
         <div className="mx-auto max-w-2xl">
           <div
-            className="flex items-end gap-3 rounded-2xl p-3"
+            className="flex items-center gap-3 rounded-2xl px-4 py-3"
             style={{
-              background: "rgba(16,20,32,0.9)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              backdropFilter: "blur(16px)",
+              background: "rgba(16,20,32,0.92)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              backdropFilter: "blur(20px)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.35)",
             }}
           >
             <textarea
@@ -354,7 +355,7 @@ export default function ChatPage() {
               placeholder="Напиши вопрос... (Enter — отправить, Shift+Enter — перенос)"
               rows={1}
               disabled={sendMessage.isPending}
-              className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none"
+              className="flex-1 resize-none self-center bg-transparent text-sm leading-relaxed outline-none"
               style={{ fontFamily: "var(--font-sans)", color: "#e8edf5", maxHeight: "120px" }}
             />
 
@@ -362,12 +363,16 @@ export default function ChatPage() {
               onClick={() => send(input)}
               disabled={!input.trim() || sendMessage.isPending}
               size="sm"
-              className="h-8 w-8 flex-shrink-0 rounded-xl p-0 transition-all"
+              className="h-9 w-9 flex-shrink-0 self-center rounded-xl p-0 transition-all"
               style={{
                 background:
                   input.trim() && !sendMessage.isPending
-                    ? "rgba(79,142,247,0.85)"
-                    : "rgba(79,142,247,0.18)",
+                    ? "rgba(79,142,247,0.9)"
+                    : "rgba(79,142,247,0.15)",
+                border:
+                  input.trim() && !sendMessage.isPending
+                    ? "1px solid rgba(79,142,247,0.5)"
+                    : "1px solid rgba(79,142,247,0.15)",
               }}
             >
               <Send className="size-3.5" />
@@ -376,7 +381,7 @@ export default function ChatPage() {
 
           <p
             className="mt-2 text-center"
-            style={{ fontFamily: "var(--font-sans)", fontSize: "10px", color: "rgba(136,146,164,0.3)" }}
+            style={{ fontFamily: "var(--font-sans)", fontSize: "10px", color: "rgba(136,146,164,0.28)" }}
           >
             ARIA может ошибаться. Для бронирования используй раздел «Забронировать».
           </p>
